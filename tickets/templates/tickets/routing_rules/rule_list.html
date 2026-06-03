@@ -1,0 +1,120 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+.page-wrapper{display:flex;justify-content:center;margin:40px 0 60px;}
+.page-card{width:1100px;background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.10);padding:35px 40px;}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;flex-wrap:wrap;gap:14px;}
+.page-title{font-size:28px;font-weight:700;color:#1B3E92;margin:0 0 6px;}
+.page-subtitle{font-size:14px;color:#606060;margin:0;}
+.btn-primary{background:#289DFF;color:#fff;border:none;border-radius:8px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;text-decoration:none;display:inline-block;}
+.btn-primary:hover{background:#1B3E92;}
+.btn-secondary{background:#9A979F;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;text-decoration:none;display:inline-block;}
+.btn-secondary:hover{background:#606060;}
+.btn-danger{background:#dc3545;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;text-decoration:none;display:inline-block;}
+.btn-danger:hover{background:#b02a37;}
+.btn-toggle-on{background:#198754;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;}
+.btn-toggle-on:hover{background:#146c43;}
+.btn-toggle-off{background:#9A979F;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;}
+.btn-toggle-off:hover{background:#606060;}
+.info-box{background:#EEF6FF;border:1px solid #bfdbfe;border-radius:10px;padding:16px 20px;margin-bottom:28px;font-size:13px;color:#1e40af;line-height:1.6;}
+table{width:100%;border-collapse:collapse;}
+th{background:#F7F8FB;padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#606060;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid #e5e7eb;}
+td{padding:14px 16px;font-size:13px;color:#333;border-bottom:1px solid #f3f4f6;vertical-align:middle;}
+tr:hover td{background:#fafafa;}
+.badge-active{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#d1fae5;color:#065f46;}
+.badge-inactive{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#e2e3e5;color:#383d41;}
+.workload-chip{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;background:#EEF6FF;color:#1B3E92;margin-left:6px;}
+.workload-chip.busy{background:#fff3cd;color:#856404;}
+.workload-chip.critical{background:#fee2e2;color:#991b1b;}
+.actions-cell{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.empty-state{text-align:center;padding:48px 20px;}
+@media(max-width:900px){.page-card{width:96%;padding:24px 16px;}}
+</style>
+
+<div class="page-wrapper">
+<div class="page-card">
+
+    <div class="page-header">
+        <div>
+            <h2 class="page-title">Reglas de enrutamiento</h2>
+            <p class="page-subtitle">Controla a qué técnico se asignan automáticamente los tickets según categoría y área.</p>
+        </div>
+        <a href="{% url 'routing_rule_create' %}" class="btn-primary">+ Nueva regla</a>
+    </div>
+
+    <div class="info-box">
+        <strong>¿Cómo funcionan?</strong> Al crear un ticket, el sistema busca la regla más específica para su categoría y área.
+        Una regla con área definida tiene <strong>precedencia</strong> sobre una genérica (área vacía = aplica a todas las áreas).
+        Si no hay regla activa, el ticket queda sin técnico asignado y deberá asignarse manualmente.
+    </div>
+
+    {% if rules %}
+    <table>
+        <thead>
+            <tr>
+                <th>Categoría</th>
+                <th>Área</th>
+                <th>Técnico asignado</th>
+                <th>Tickets activos</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for rule in rules %}
+            <tr {% if not rule.is_active %}style="opacity:.55;"{% endif %}>
+                <td><strong>{{ rule.get_category_display }}</strong></td>
+                <td>
+                    {% if rule.area %}{{ rule.area }}
+                    {% else %}<span style="color:#9A979F;font-style:italic;">Todas las áreas</span>{% endif %}
+                </td>
+                <td>{{ rule.assigned_to.get_full_name|default:rule.assigned_to.username }}</td>
+                <td>
+                    {% if rule.open_tickets == 0 %}
+                        <span class="workload-chip">Sin carga</span>
+                    {% elif rule.open_tickets <= 3 %}
+                        <span class="workload-chip">{{ rule.open_tickets }} activo{{ rule.open_tickets|pluralize }}</span>
+                    {% elif rule.open_tickets <= 6 %}
+                        <span class="workload-chip busy">{{ rule.open_tickets }} activos</span>
+                    {% else %}
+                        <span class="workload-chip critical">{{ rule.open_tickets }} activos</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if rule.is_active %}<span class="badge-active">Activa</span>
+                    {% else %}<span class="badge-inactive">Inactiva</span>{% endif %}
+                </td>
+                <td>
+                    <div class="actions-cell">
+                        <a href="{% url 'routing_rule_edit' rule.pk %}" class="btn-secondary">Editar</a>
+                        <form method="post" action="{% url 'routing_rule_toggle' rule.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            {% if rule.is_active %}
+                                <button type="submit" class="btn-toggle-on">Activa</button>
+                            {% else %}
+                                <button type="submit" class="btn-toggle-off">Inactiva</button>
+                            {% endif %}
+                        </form>
+                        <a href="{% url 'routing_rule_delete' rule.pk %}" class="btn-danger">Eliminar</a>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {% else %}
+    <div class="empty-state">
+        <p style="font-size:22px;font-weight:700;color:#1B3E92;margin-bottom:8px;">Sin reglas configuradas</p>
+        <p style="font-size:14px;color:#606060;margin-bottom:20px;">Los tickets se crearán sin asignación automática.</p>
+        <a href="{% url 'routing_rule_create' %}" class="btn-primary">Crear primera regla</a>
+    </div>
+    {% endif %}
+
+    <div style="margin-top:28px;">
+        <a href="{% url 'ticket_list' %}" class="btn-secondary">← Volver al panel IT</a>
+    </div>
+
+</div>
+</div>
+{% endblock %}

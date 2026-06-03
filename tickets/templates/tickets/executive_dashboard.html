@@ -1,0 +1,315 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+.page-wrapper{display:flex;justify-content:center;margin:40px 0 60px;}
+.page-card{width:1280px;background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.10);padding:35px 40px;}
+
+/* KPI comparativa */
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:30px;}
+.kpi-card{background:#F7F8FB;border-radius:14px;padding:24px 26px;position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:#289DFF;border-radius:14px 0 0 14px;}
+.kpi-label{font-size:12px;font-weight:700;color:#606060;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.kpi-value{font-size:40px;font-weight:800;color:#1B3E92;line-height:1;}
+.kpi-sub{font-size:13px;color:#9A979F;margin-top:8px;}
+.kpi-delta{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;padding:3px 9px;border-radius:999px;margin-top:10px;}
+.kpi-delta.up{background:#d1fadf;color:#198754;}
+.kpi-delta.down{background:#fde8e8;color:#dc3545;}
+.kpi-delta.neutral{background:#e9ecef;color:#606060;}
+
+/* Fila de gráficos */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:30px;}
+.chart-card{background:#F7F8FB;border-radius:14px;padding:24px;}
+.chart-card h3{font-size:15px;font-weight:700;color:#1B3E92;margin:0 0 20px;}
+
+/* Donut SLA central */
+.sla-donut-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
+.sla-pct-big{font-size:52px;font-weight:800;color:#198754;line-height:1;}
+.sla-pct-label{font-size:13px;color:#606060;font-weight:600;text-align:center;}
+
+/* Segunda fila de gráficos */
+.charts-row2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:30px;}
+
+/* Tickets en riesgo */
+.risk-table{width:100%;border-collapse:collapse;font-size:13px;}
+.risk-table th{background:#1B3E92;color:#fff;padding:10px 14px;text-align:left;font-weight:600;}
+.risk-table th:first-child{border-radius:8px 0 0 8px;}
+.risk-table th:last-child{border-radius:0 8px 8px 0;}
+.risk-table td{padding:10px 14px;border-bottom:1px solid #f0f0f0;vertical-align:middle;}
+.risk-table tr:last-child td{border-bottom:none;}
+.risk-table tr:hover td{background:#F7F8FB;}
+.overdue-badge{background:#dc3545;color:#fff;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;}
+.warning-badge{background:#fd7e14;color:#fff;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;}
+
+.section-title{font-size:18px;font-weight:700;color:#1B3E92;margin:0 0 16px;}
+.empty-risk{text-align:center;padding:30px;color:#9A979F;font-size:14px;background:#F7F8FB;border-radius:12px;}
+
+@media(max-width:1100px){.page-card{width:96%;padding:24px 18px;}.kpi-grid{grid-template-columns:repeat(2,1fr);}.charts-row,.charts-row2{grid-template-columns:1fr;}}
+@media(max-width:600px){.kpi-grid{grid-template-columns:1fr;}.kpi-value{font-size:32px;}}
+</style>
+
+<div class="page-wrapper">
+<div class="page-card">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:12px;">
+        <div>
+            <h2 style="font-size:30px;font-weight:700;color:#1B3E92;margin:0 0 6px;">Dashboard Ejecutivo</h2>
+            <p style="font-size:15px;color:#606060;margin:0;">Comparativa mensual · Tendencia 30 días · Riesgo SLA</p>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:13px;color:#9A979F;">Mes actual</div>
+            <div style="font-size:18px;font-weight:700;color:#1B3E92;">{{ month_label }}</div>
+        </div>
+    </div>
+
+    <!-- KPIs con comparativa -->
+    <p class="section-title">Métricas del mes vs. {{ prev_month_label }}</p>
+    <div class="kpi-grid">
+
+        <div class="kpi-card">
+            <div class="kpi-label">Tickets recibidos</div>
+            <div class="kpi-value">{{ current.total }}</div>
+            <div class="kpi-sub">{{ previous.total }} el mes anterior</div>
+            {% if kpi_deltas.total is not None %}
+                {% if kpi_deltas.total > 0 %}
+                    <div class="kpi-delta up">▲ {{ kpi_deltas.total }}%</div>
+                {% elif kpi_deltas.total < 0 %}
+                    <div class="kpi-delta down">▼ {{ kpi_deltas.total|cut:"-" }}%</div>
+                {% else %}
+                    <div class="kpi-delta neutral">Sin cambio</div>
+                {% endif %}
+            {% else %}
+                <div class="kpi-delta neutral">Sin datos anteriores</div>
+            {% endif %}
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-label">Tickets cerrados</div>
+            <div class="kpi-value">{{ current.cerrados }}</div>
+            <div class="kpi-sub">{{ previous.cerrados }} el mes anterior</div>
+            {% if kpi_deltas.cerrados is not None %}
+                {% if kpi_deltas.cerrados > 0 %}
+                    <div class="kpi-delta up">▲ {{ kpi_deltas.cerrados }}%</div>
+                {% elif kpi_deltas.cerrados < 0 %}
+                    <div class="kpi-delta down">▼ {{ kpi_deltas.cerrados|cut:"-" }}%</div>
+                {% else %}
+                    <div class="kpi-delta neutral">Sin cambio</div>
+                {% endif %}
+            {% else %}
+                <div class="kpi-delta neutral">Sin datos anteriores</div>
+            {% endif %}
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-label">SLA cumplidos (mes)</div>
+            <div class="kpi-value">{{ current.sla_cumplidos }}</div>
+            <div class="kpi-sub">{{ previous.sla_cumplidos }} el mes anterior · {{ current.sla_vencidos }} vencidos este mes</div>
+            {% if kpi_deltas.sla is not None %}
+                {% if kpi_deltas.sla > 0 %}
+                    <div class="kpi-delta up">▲ {{ kpi_deltas.sla }}%</div>
+                {% elif kpi_deltas.sla < 0 %}
+                    <div class="kpi-delta down">▼ {{ kpi_deltas.sla|cut:"-" }}%</div>
+                {% else %}
+                    <div class="kpi-delta neutral">Sin cambio</div>
+                {% endif %}
+            {% else %}
+                <div class="kpi-delta neutral">Sin datos anteriores</div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- Tendencia 30 días + Donut SLA -->
+    <div class="charts-row">
+        <div class="chart-card">
+            <h3>Tendencia — últimos 30 días</h3>
+            <canvas id="trendChart" height="100"></canvas>
+        </div>
+        <div class="chart-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <h3 style="width:100%;">Cumplimiento SLA histórico</h3>
+            {% if sla_pct is not None %}
+                <div class="sla-donut-wrap">
+                    <div class="sla-pct-big">{{ sla_pct }}%</div>
+                    <div class="sla-pct-label">de tickets cerrados<br>cumplieron el SLA</div>
+                    <canvas id="slaDonut" width="200" height="200"></canvas>
+                </div>
+            {% else %}
+                <p style="color:#9A979F;font-size:14px;text-align:center;">Sin datos suficientes</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Categorías + Estado actual -->
+    <div class="charts-row2">
+        <div class="chart-card">
+            <h3>Tickets por categoría (total histórico)</h3>
+            <canvas id="categoryChart" height="120"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Estado actual del mes</h3>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
+                {% with t=current.total %}
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px;">
+                        <span style="color:#9A979F;">Pendientes</span>
+                        <span>{{ current.pendientes }}</span>
+                    </div>
+                    <div style="background:#E5E5E5;border-radius:999px;height:8px;">
+                        {% if t > 0 %}<div style="background:#9A979F;border-radius:999px;height:8px;width:{% widthratio current.pendientes t 100 %}%;"></div>{% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px;">
+                        <span style="color:#1B3E92;">En proceso</span>
+                        <span>{{ current.en_proceso }}</span>
+                    </div>
+                    <div style="background:#E5E5E5;border-radius:999px;height:8px;">
+                        {% if t > 0 %}<div style="background:#1B3E92;border-radius:999px;height:8px;width:{% widthratio current.en_proceso t 100 %}%;"></div>{% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px;">
+                        <span style="color:#198754;">Cerrados</span>
+                        <span>{{ current.cerrados }}</span>
+                    </div>
+                    <div style="background:#E5E5E5;border-radius:999px;height:8px;">
+                        {% if t > 0 %}<div style="background:#198754;border-radius:999px;height:8px;width:{% widthratio current.cerrados t 100 %}%;"></div>{% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px;">
+                        <span style="color:#dc3545;">SLA vencidos</span>
+                        <span>{{ current.sla_vencidos }}</span>
+                    </div>
+                    <div style="background:#E5E5E5;border-radius:999px;height:8px;">
+                        {% if t > 0 %}<div style="background:#dc3545;border-radius:999px;height:8px;width:{% widthratio current.sla_vencidos t 100 %}%;"></div>{% endif %}
+                    </div>
+                </div>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tickets en riesgo -->
+    <p class="section-title">Tickets en riesgo de SLA
+        <span style="font-size:13px;font-weight:400;color:#9A979F;">(activos con SLA vencido o &lt; 4h)</span>
+    </p>
+    {% if at_risk %}
+        <table class="risk-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Título</th>
+                    <th>Prioridad</th>
+                    <th>Estado</th>
+                    <th>SLA deadline</th>
+                    <th>Técnico</th>
+                    <th>Riesgo</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for t in at_risk %}
+                <tr>
+                    <td><strong>{{ t.id }}</strong></td>
+                    <td><a href="{% url 'respond_ticket' t.id %}" style="color:#1B3E92;font-weight:600;text-decoration:none;">{{ t.title|truncatechars:50 }}</a></td>
+                    <td><span class="badge {{ t.priority_css_class }}" style="padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;color:#fff;">{{ t.get_priority_display }}</span></td>
+                    <td>{{ t.get_status_display }}</td>
+                    <td>{{ t.sla_deadline|date:"d/m/Y H:i" }}</td>
+                    <td>{{ t.assigned_to.get_full_name|default:t.assigned_to.username|default:"Sin asignar" }}</td>
+                    <td>
+                        {% if t.is_overdue %}
+                            <span class="overdue-badge">VENCIDO</span>
+                        {% else %}
+                            <span class="warning-badge">&lt; 4h</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty-risk">Sin tickets en riesgo inmediato. ✓</div>
+    {% endif %}
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+    const trend    = {{ chart_trend|safe }};
+    const slaDonut = {{ chart_sla|safe }};
+    const category = {{ chart_category|safe }};
+
+    // Línea de tendencia
+    new Chart(document.getElementById("trendChart"), {
+        type: "line",
+        data: {
+            labels: trend.labels,
+            datasets: [{
+                label: "Tickets creados",
+                data: trend.data,
+                borderColor: "#289DFF",
+                backgroundColor: "rgba(40,157,255,.12)",
+                borderWidth: 2,
+                pointRadius: 3,
+                tension: 0.35,
+                fill: true,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { font: { size: 11 }, maxTicksLimit: 10 } },
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+            }
+        }
+    });
+
+    // Donut SLA
+    const donutEl = document.getElementById("slaDonut");
+    if (donutEl) {
+        new Chart(donutEl, {
+            type: "doughnut",
+            data: {
+                labels: slaDonut.labels,
+                datasets: [{
+                    data: slaDonut.data,
+                    backgroundColor: ["#198754", "#dc3545", "#9A979F"],
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: false,
+                cutout: "68%",
+                plugins: {
+                    legend: { position: "bottom", labels: { font: { size: 12 }, padding: 14 } }
+                }
+            }
+        });
+    }
+
+    // Categorías
+    new Chart(document.getElementById("categoryChart"), {
+        type: "bar",
+        data: {
+            labels: category.labels,
+            datasets: [{
+                label: "Tickets",
+                data: category.data,
+                backgroundColor: "#289DFF",
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: "y",
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { beginAtZero: true, ticks: { stepSize: 1 } },
+            }
+        }
+    });
+})();
+</script>
+{% endblock %}

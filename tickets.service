@@ -1,0 +1,12 @@
+[Unit]
+Description=Gunicorn for LAS Cargo IT Service Desk
+After=network.target
+
+[Service]
+User=mariaadmin
+Group=www-data
+WorkingDirectory=/var/www/tickets/ticket-it/lascargo_it
+ExecStart=/var/www/tickets/venv/bin/gunicorn --workers 3 --bind unix:/var/www/tickets/tickets.sock lascargo_it.wsgi:application
+
+[Install]
+WantedBy=multi-user.target

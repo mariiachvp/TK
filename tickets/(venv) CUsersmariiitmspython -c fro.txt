@@ -1,0 +1,4 @@
+(venv) C:\Users\marii\itms>python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+_sfq0(4*8-z3(z*k%rsz#dtxv5pzpj(udi@ok97rnfh%*y)6d&
+
+(venv) C:\Users\marii\itms>

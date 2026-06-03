@@ -1,0 +1,12 @@
+django>=6.0.3
+gunicorn
+requests             # Microsoft Graph API (Fase 3)
+
+# Producción
+psycopg2-binary      # PostgreSQL driver
+
+# Fase 5 — notificaciones async con reintentos (requiere Redis)
+# Instalar con: pip install celery redis
+# Activar configurando CELERY_BROKER_URL en settings (ej. redis://localhost:6379/0)
+# celery>=5.3
+# redis>=5.0

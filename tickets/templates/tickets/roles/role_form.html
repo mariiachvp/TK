@@ -1,0 +1,167 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+  .form-wrapper{max-width:860px;margin:0 auto;padding:32px 0 48px;}
+  .form-header{margin-bottom:28px;}
+  .form-title{font-size:24px;font-weight:700;color:#1B3E92;margin:0 0 6px;}
+  .back-link{font-size:13px;color:#9A979F;text-decoration:none;}
+  .back-link:hover{color:#1B3E92;}
+  .card{background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:28px 32px;margin-bottom:20px;}
+  .card-title{font-size:13px;font-weight:700;color:#9A979F;text-transform:uppercase;letter-spacing:.5px;margin:0 0 20px;padding-bottom:12px;border-bottom:1px solid #f0f0f0;}
+  .field-group{margin-bottom:20px;}
+  label.field-label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:7px;}
+  .field-help{font-size:11px;color:#9A979F;margin-top:5px;}
+  .error-msg{font-size:12px;color:#dc3545;margin-top:4px;}
+  .checkbox-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .checkbox-row input[type=checkbox]{width:17px;height:17px;accent-color:#1B3E92;cursor:pointer;}
+  .checkbox-row label{font-size:14px;font-weight:500;cursor:pointer;}
+  /* Permisos por módulo */
+  .perm-section{margin-bottom:24px;}
+  .perm-module-title{font-size:13px;font-weight:700;color:#1B3E92;margin-bottom:10px;padding:6px 0;border-bottom:1px solid #e5e7eb;}
+  .perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;}
+  .perm-item{display:flex;align-items:flex-start;gap:10px;padding:8px 12px;border-radius:8px;border:1px solid #e5e7eb;background:#fafafa;cursor:pointer;transition:all .15s;}
+  .perm-item:hover{border-color:#1B3E92;background:#eff6ff;}
+  .perm-item input[type=checkbox]{margin-top:2px;width:16px;height:16px;accent-color:#1B3E92;cursor:pointer;flex-shrink:0;}
+  .perm-item label{font-size:13px;font-weight:500;color:#374151;cursor:pointer;line-height:1.4;}
+  .perm-item label small{display:block;font-size:11px;color:#9A979F;font-weight:400;}
+  /* Botones */
+  .form-footer{display:flex;gap:12px;align-items:center;margin-top:8px;}
+  .btn-submit{background:#1B3E92;color:#fff;padding:12px 28px;border-radius:8px;border:none;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s;}
+  .btn-submit:hover{background:#289DFF;}
+  .btn-cancel{color:#9A979F;font-size:14px;text-decoration:none;}
+  .btn-cancel:hover{color:#1B3E92;}
+  /* Toggle switches para booleanos */
+  .toggle-field{display:flex;align-items:center;gap:12px;padding:14px 0;}
+  .toggle-field label.toggle-label{font-size:14px;font-weight:600;color:#374151;flex:1;}
+  .toggle-field small{font-size:12px;color:#9A979F;display:block;}
+  .select-all-btn{font-size:12px;color:#1B3E92;background:none;border:none;cursor:pointer;font-weight:600;padding:0;font-family:'Montserrat',sans-serif;}
+  .select-all-btn:hover{text-decoration:underline;}
+</style>
+
+<div class="form-wrapper">
+  <div class="form-header">
+    <a href="{% url 'role_list' %}" class="back-link">← Volver a roles</a>
+    <h1 class="form-title">{{ title }}</h1>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <!-- Identificación -->
+    <div class="card">
+      <p class="card-title">Identificación</p>
+
+      <div class="field-group">
+        <label class="field-label" for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+        {{ form.name }}
+        {% if form.name.errors %}<div class="error-msg">{{ form.name.errors.0 }}</div>{% endif %}
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="{{ form.code.id_for_label }}">{{ form.code.label }}</label>
+        {{ form.code }}
+        <div class="field-help">{{ form.code.help_text }}</div>
+        {% if form.code.errors %}<div class="error-msg">{{ form.code.errors.0 }}</div>{% endif %}
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+        {{ form.description }}
+        {% if form.description.errors %}<div class="error-msg">{{ form.description.errors.0 }}</div>{% endif %}
+      </div>
+    </div>
+
+    <!-- Configuración de acceso -->
+    <div class="card">
+      <p class="card-title">Configuración de acceso</p>
+
+      <div class="toggle-field">
+        <div style="flex:1;">
+          <label class="toggle-label">{{ form.is_active.label }}</label>
+          <small>Los usuarios con roles inactivos no pueden iniciar sesión ni usar el sistema.</small>
+        </div>
+        {{ form.is_active }}
+        {% if form.is_active.errors %}<div class="error-msg">{{ form.is_active.errors.0 }}</div>{% endif %}
+      </div>
+
+      <hr style="border:none;border-top:1px solid #f0f0f0;margin:4px 0;">
+
+      <div class="toggle-field">
+        <div style="flex:1;">
+          <label class="toggle-label">{{ form.is_it_staff.label }}</label>
+          <small>{{ form.is_it_staff.help_text }}</small>
+        </div>
+        {{ form.is_it_staff }}
+        {% if form.is_it_staff.errors %}<div class="error-msg">{{ form.is_it_staff.errors.0 }}</div>{% endif %}
+      </div>
+
+      <hr style="border:none;border-top:1px solid #f0f0f0;margin:4px 0 16px;">
+
+      <div class="field-group">
+        <label class="field-label" for="{{ form.ticket_area.id_for_label }}">{{ form.ticket_area.label }}</label>
+        {{ form.ticket_area }}
+        <div class="field-help">{{ form.ticket_area.help_text }}</div>
+        {% if form.ticket_area.errors %}<div class="error-msg">{{ form.ticket_area.errors.0 }}</div>{% endif %}
+      </div>
+    </div>
+
+    <!-- Permisos por módulo -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid #f0f0f0;">
+        <p class="card-title" style="margin:0;border:none;padding:0;">Permisos asignados</p>
+        <div style="display:flex;gap:12px;">
+          <button type="button" class="select-all-btn" onclick="toggleAll(true)">Seleccionar todos</button>
+          <button type="button" class="select-all-btn" style="color:#dc3545;" onclick="toggleAll(false)">Quitar todos</button>
+        </div>
+      </div>
+
+      {% if form.permissions.errors %}
+        <div class="error-msg" style="margin-bottom:12px;">{{ form.permissions.errors.0 }}</div>
+      {% endif %}
+
+      {% for module_label, perms in permissions_by_module %}
+      <div class="perm-section">
+        <div class="perm-module-title">
+          {{ module_label }}
+          <button type="button" class="select-all-btn" style="margin-left:12px;"
+                  onclick="toggleModule('module-{{ forloop.counter }}', true)">Todo</button>
+          <button type="button" class="select-all-btn" style="color:#9A979F;"
+                  onclick="toggleModule('module-{{ forloop.counter }}', false)">Nada</button>
+        </div>
+        <div class="perm-grid" id="module-{{ forloop.counter }}">
+          {% for perm in perms %}
+          <label class="perm-item" for="perm_{{ perm.pk }}">
+            <input type="checkbox"
+                   name="permissions"
+                   value="{{ perm.pk }}"
+                   id="perm_{{ perm.pk }}"
+                   {% if form.instance.pk and perm in form.instance.permissions.all %}checked{% endif %}
+                   {% if not form.instance.pk and perm.pk in form.initial.permissions %}checked{% endif %}>
+            <span>
+              {{ perm.label }}
+              <small>{{ perm.codename }}</small>
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="form-footer">
+      <button type="submit" class="btn-submit">{{ btn_label }}</button>
+      <a href="{% url 'role_list' %}" class="btn-cancel">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<script>
+function toggleAll(checked) {
+  document.querySelectorAll('input[name="permissions"]').forEach(cb => cb.checked = checked);
+}
+function toggleModule(moduleId, checked) {
+  document.getElementById(moduleId).querySelectorAll('input[name="permissions"]')
+    .forEach(cb => cb.checked = checked);
+}
+</script>
+{% endblock %}

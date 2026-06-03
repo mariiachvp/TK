@@ -1,0 +1,42 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+.page-wrapper{display:flex;justify-content:center;margin:40px 0 60px;}
+.page-card{width:540px;background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.10);padding:35px 40px;text-align:center;}
+.warn-icon{font-size:48px;margin-bottom:16px;}
+.page-title{font-size:24px;font-weight:700;color:#dc3545;margin:0 0 12px;}
+.rule-summary{background:#F7F8FB;border-radius:10px;padding:16px 20px;margin:20px 0;text-align:left;}
+.rule-row{display:flex;gap:10px;margin-bottom:8px;font-size:13px;}
+.rule-label{font-weight:700;color:#606060;min-width:90px;}
+.actions{display:flex;justify-content:center;gap:16px;margin-top:24px;}
+.btn-danger{background:#dc3545;color:#fff;border:none;border-radius:8px;padding:11px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;}
+.btn-danger:hover{background:#b02a37;}
+.btn-secondary{background:#9A979F;color:#fff;border:none;border-radius:8px;padding:11px 22px;font-size:14px;font-weight:600;text-decoration:none;display:inline-block;font-family:'Montserrat',sans-serif;}
+.btn-secondary:hover{background:#606060;}
+</style>
+
+<div class="page-wrapper">
+<div class="page-card">
+
+    <div class="warn-icon">⚠️</div>
+    <h2 class="page-title">Eliminar regla de enrutamiento</h2>
+    <p style="font-size:14px;color:#333;">Esta acción no se puede deshacer. Los tickets futuros de esta categoría y área quedarán sin asignación automática.</p>
+
+    <div class="rule-summary">
+        <div class="rule-row"><span class="rule-label">Categoría:</span><span>{{ rule.get_category_display }}</span></div>
+        <div class="rule-row"><span class="rule-label">Área:</span><span>{% if rule.area %}{{ rule.area }}{% else %}Todas las áreas{% endif %}</span></div>
+        <div class="rule-row"><span class="rule-label">Técnico:</span><span>{{ rule.assigned_to.get_full_name|default:rule.assigned_to.username }}</span></div>
+        <div class="rule-row"><span class="rule-label">Estado:</span><span>{% if rule.is_active %}Activa{% else %}Inactiva{% endif %}</span></div>
+    </div>
+
+    <div class="actions">
+        <a href="{% url 'routing_rule_list' %}" class="btn-secondary">Cancelar</a>
+        <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn-danger">Sí, eliminar regla</button>
+        </form>
+    </div>
+
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,273 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+.page-wrapper{display:flex;justify-content:center;margin:40px 0 60px;}
+.page-card{width:900px;background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.10);padding:35px 40px;}
+.back-link{font-size:13px;color:#9A979F;text-decoration:none;display:block;margin-bottom:14px;}
+.back-link:hover{color:#1B3E92;}
+.ticket-num{font-size:13px;font-weight:700;color:#9A979F;margin-bottom:6px;}
+.ticket-title{font-size:26px;font-weight:700;color:#1B3E92;margin:0 0 14px;}
+
+/* Badges */
+.badge{display:inline-block;padding:5px 13px;border-radius:999px;font-size:12px;font-weight:700;color:#fff;}
+.badge-abierto{background:#289DFF;}
+.badge-proceso{background:#1B3E92;}
+.badge-resuelto{background:#198754;}
+.badge-cerrado{background:#606060;}
+.badge-reabierto{background:#fd7e14;}
+.badge-baja{background:#9A979F;}
+.badge-media{background:#289DFF;}
+.badge-alta{background:#fd7e14;}
+.badge-critica{background:#dc3545;}
+.badge-neutral{background:#e5e7eb;color:#374151;}
+
+/* Meta */
+.meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0 28px;}
+.info-block{background:#F7F8FB;border-radius:10px;padding:12px 16px;}
+.info-label{font-size:11px;font-weight:700;color:#9A979F;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+.info-value{font-size:14px;color:#000;line-height:1.4;}
+
+/* Conversación */
+.section-title{font-size:16px;font-weight:700;color:#1B3E92;margin:28px 0 14px;padding-bottom:8px;border-bottom:2px solid #eef0f4;}
+.conv-thread{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
+.msg-bubble{border-radius:12px;padding:14px 18px;max-width:90%;}
+.msg-user{background:#F7F8FB;border:1px solid #e5e7eb;align-self:flex-start;}
+.msg-it{background:#EEF6FF;border:1px solid #bfdbfe;align-self:flex-end;}
+.msg-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+.msg-author{font-size:12px;font-weight:700;color:#374151;}
+.msg-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;}
+.badge-it-label{background:#dbeafe;color:#1e40af;}
+.badge-user-label{background:#f3f4f6;color:#374151;}
+.msg-time{font-size:11px;color:#9A979F;}
+.msg-content{font-size:13px;color:#333;line-height:1.6;white-space:pre-wrap;}
+
+/* Formulario comentario */
+.comment-add-box{background:#F7F8FB;border-radius:10px;padding:16px 20px;margin-top:12px;}
+.comment-add-box textarea{width:100%;border:1px solid #d0d0d0;border-radius:8px;padding:12px;font-family:'Montserrat',sans-serif;font-size:13px;resize:vertical;min-height:70px;box-sizing:border-box;}
+.comment-add-box textarea:focus{outline:none;border-color:#289DFF;}
+.btn-send{background:#1B3E92;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;margin-top:8px;}
+.btn-send:hover{background:#289DFF;}
+
+/* Reabrir */
+.reopen-box{background:#fff3cd;border:1px solid #fde68a;border-radius:10px;padding:16px 20px;margin-top:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.reopen-text{font-size:14px;color:#92400e;font-weight:600;}
+.btn-reopen{background:#fd7e14;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;}
+.btn-reopen:hover{background:#e06900;}
+
+/* Adjuntos */
+.attach-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.attach-item{display:flex;align-items:center;justify-content:space-between;background:#F7F8FB;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;flex-wrap:wrap;gap:8px;}
+.attach-name{font-size:13px;font-weight:600;color:#1B3E92;word-break:break-all;}
+.attach-meta{font-size:11px;color:#9A979F;}
+.attach-actions{display:flex;gap:8px;flex-shrink:0;}
+.btn-dl{background:#1B3E92;color:#fff;border:none;border-radius:6px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;font-family:'Montserrat',sans-serif;}
+.btn-dl:hover{background:#289DFF;}
+.btn-del-attach{background:#dc3545;color:#fff;border:none;border-radius:6px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;}
+.btn-del-attach:hover{background:#b02a37;}
+.attach-upload-box{background:#F7F8FB;border-radius:10px;padding:14px 18px;margin-top:8px;}
+.attach-upload-box input[type=file]{font-size:13px;font-family:'Montserrat',sans-serif;}
+.btn-upload{background:#198754;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;margin-top:8px;}
+.btn-upload:hover{background:#146c43;}
+
+@media(max-width:800px){.page-card{width:96%;padding:24px 16px;}.meta-grid{grid-template-columns:1fr 1fr;}}
+</style>
+
+<div class="page-wrapper">
+<div class="page-card">
+
+    <a href="{% url 'my_tickets' %}" class="back-link">← Volver a mis tickets</a>
+
+    <div class="ticket-num">{{ ticket.ticket_number|default:ticket.id }}</div>
+    <h2 class="ticket-title">{{ ticket.title }}</h2>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+        {% if ticket.status == "ABIERTO" %}<span class="badge badge-abierto">Abierto</span>
+        {% elif ticket.status == "EN_PROCESO" %}<span class="badge badge-proceso">En progreso</span>
+        {% elif ticket.status == "RESUELTO" %}<span class="badge badge-resuelto">Resuelto</span>
+        {% elif ticket.status == "CERRADO" %}<span class="badge badge-cerrado">Cerrado</span>
+        {% elif ticket.status == "REABIERTO" %}<span class="badge badge-reabierto">Reabierto</span>
+        {% endif %}
+
+        {% if ticket.priority == "LOW" %}<span class="badge badge-baja">Baja</span>
+        {% elif ticket.priority == "MEDIUM" %}<span class="badge badge-media">Media</span>
+        {% elif ticket.priority == "HIGH" %}<span class="badge badge-alta">Alta</span>
+        {% elif ticket.priority == "CRITICAL" %}<span class="badge badge-critica">Crítica</span>
+        {% endif %}
+
+        <span class="badge badge-neutral">{{ ticket.get_area_display }}</span>
+        <span class="badge badge-neutral">{{ ticket.get_category_display }}</span>
+    </div>
+
+    <div class="meta-grid">
+        <div class="info-block">
+            <div class="info-label">Creado</div>
+            <div class="info-value">{{ ticket.created_at|date:"d/m/Y H:i" }}</div>
+        </div>
+        <div class="info-block">
+            <div class="info-label">Última actualización</div>
+            <div class="info-value">{{ ticket.updated_at|date:"d/m/Y H:i" }}</div>
+        </div>
+        <div class="info-block">
+            <div class="info-label">Técnico asignado</div>
+            <div class="info-value">
+                {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username|default:"Sin asignar" }}
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== CONVERSACIÓN ===== -->
+    <div class="section-title">Conversación</div>
+
+    <div class="conv-thread">
+
+        <!-- 1. Mensaje inicial del usuario (descripción) -->
+        <div class="msg-bubble msg-user">
+            <div class="msg-header">
+                <span class="msg-author">{{ ticket.requester.get_full_name|default:ticket.requester.username }}</span>
+                <span class="msg-badge badge-user-label">Yo · solicitud inicial</span>
+                <span class="msg-time">{{ ticket.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="msg-content">{{ ticket.description }}</div>
+        </div>
+
+        <!-- 2. Comentarios públicos en orden cronológico -->
+        {% for note in public_notes %}
+        {% if note.author == ticket.requester %}
+        <div class="msg-bubble msg-user">
+            <div class="msg-header">
+                <span class="msg-author">{{ note.author.get_full_name|default:note.author.username }}</span>
+                <span class="msg-badge badge-user-label">Yo</span>
+                <span class="msg-time">{{ note.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="msg-content">{{ note.content }}</div>
+        </div>
+        {% else %}
+        <div class="msg-bubble msg-it">
+            <div class="msg-header">
+                <span class="msg-author">{{ note.author.get_full_name|default:note.author.username|default:"Equipo IT" }}</span>
+                <span class="msg-badge badge-it-label">IT</span>
+                <span class="msg-time">{{ note.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="msg-content">{{ note.content }}</div>
+        </div>
+        {% endif %}
+        {% endfor %}
+
+        <!-- 3. Respuesta formal de IT (si existe, al final del hilo) -->
+        {% if ticket.response %}
+        <div class="msg-bubble msg-it">
+            <div class="msg-header">
+                <span class="msg-author">Equipo IT</span>
+                <span class="msg-badge badge-it-label">IT · Respuesta oficial</span>
+                <span class="msg-time">{{ ticket.updated_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="msg-content">{{ ticket.response }}</div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    {% if can_comment %}
+    <div class="comment-add-box">
+        <p style="font-size:12px;font-weight:700;color:#374151;margin:0 0 8px;">Agregar un comentario</p>
+        <form method="post" action="{% url 'add_user_comment' ticket.pk %}">
+            {% csrf_token %}
+            <textarea name="content" placeholder="Escribe información adicional, responde a IT o describe cómo evolucionó el problema…" rows="3"></textarea>
+            <button type="submit" class="btn-send">Enviar comentario</button>
+        </form>
+    </div>
+    {% elif ticket.status == "CERRADO" %}
+    <p style="font-size:13px;color:#9A979F;text-align:center;margin-top:12px;">Este ticket está cerrado. Si tienes un problema nuevo, crea un nuevo ticket.</p>
+    {% endif %}
+
+    <!-- ===== HISTORIAL DE ESTADOS ===== -->
+    {% if status_history %}
+    <div class="section-title">Historial del ticket</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:28px;">
+        {% for log in status_history %}
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 14px;background:#F7F8FB;border-radius:8px;border-left:3px solid
+            {% if log.action == 'CREATED' %}#198754
+            {% elif log.action == 'STATUS_CHANGE' %}#289DFF
+            {% elif log.action == 'REOPENED' %}#fd7e14
+            {% else %}#9A979F{% endif %};">
+            <div style="flex-shrink:0;font-size:11px;color:#9A979F;margin-top:2px;min-width:100px;">
+                {{ log.timestamp|date:"d/m/Y H:i" }}
+            </div>
+            <div style="font-size:13px;color:#374151;line-height:1.4;">
+                {% if log.action == 'CREATED' %}
+                    <strong style="color:#198754;">Ticket creado</strong>
+                    {% if log.user %} por {{ log.user.get_full_name|default:log.user.username }}{% endif %}
+                {% elif log.action == 'STATUS_CHANGE' %}
+                    <strong style="color:#1B3E92;">Estado:</strong>
+                    {% if log.old_value %}<span style="color:#9A979F;">{{ log.old_value }}</span> → {% endif %}
+                    <strong>{{ log.new_value }}</strong>
+                    {% if log.user %}<span style="color:#9A979F;"> · {{ log.user.get_full_name|default:log.user.username }}</span>{% endif %}
+                {% elif log.action == 'REOPENED' %}
+                    <strong style="color:#fd7e14;">Ticket reabierto</strong>
+                    {% if log.user %} por {{ log.user.get_full_name|default:log.user.username }}{% endif %}
+                {% elif log.action == 'ASSIGNED' %}
+                    <strong style="color:#606060;">Técnico asignado:</strong> {{ log.new_value }}
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ===== ADJUNTOS ===== -->
+    <div class="section-title">Archivos adjuntos</div>
+
+    {% if attachments %}
+    <div class="attach-list">
+        {% for att in attachments %}
+        <div class="attach-item">
+            <div>
+                <div class="attach-name">{{ att.original_name }}</div>
+                <div class="attach-meta">{{ att.size_display }} · {{ att.created_at|date:"d/m/Y H:i" }}
+                    {% if att.uploaded_by %} · {{ att.uploaded_by.get_full_name|default:att.uploaded_by.username }}{% endif %}
+                </div>
+            </div>
+            <div class="attach-actions">
+                <a href="{% url 'download_attachment' att.pk %}" class="btn-dl">Descargar</a>
+                {% if att.uploaded_by == request.user and ticket.status != "CERRADO" %}
+                <form method="post" action="{% url 'delete_attachment' att.pk %}" onsubmit="return confirm('¿Eliminar este adjunto?');" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-del-attach">Eliminar</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="font-size:13px;color:#9A979F;margin-bottom:12px;">Sin archivos adjuntos.</p>
+    {% endif %}
+
+    {% if ticket.status != "CERRADO" %}
+    <div class="attach-upload-box">
+        <p style="font-size:12px;font-weight:700;color:#374151;margin:0 0 8px;">Adjuntar archivo</p>
+        <form method="post" action="{% url 'upload_attachment' ticket.pk %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="file" accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx,.zip,.txt,.log">
+            <br>
+            <small style="font-size:11px;color:#9A979F;">Permitidos: jpg, jpeg, png, pdf, docx, xlsx, zip, txt, log · Máx. 10 MB</small>
+            <br>
+            <button type="submit" class="btn-upload">Subir archivo</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Reabrir -->
+    {% if can_reopen %}
+    <div class="reopen-box">
+        <div class="reopen-text">¿El problema no fue resuelto completamente? Puedes reabrir este ticket para que IT lo revise nuevamente.</div>
+        <form method="post" action="{% url 'reopen_ticket' ticket.pk %}" onsubmit="return confirm('¿Deseas reabrir este ticket?');">
+            {% csrf_token %}
+            <button type="submit" class="btn-reopen">Reabrir ticket</button>
+        </form>
+    </div>
+    {% endif %}
+
+</div>
+</div>
+{% endblock %}

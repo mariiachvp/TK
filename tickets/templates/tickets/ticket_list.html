@@ -1,0 +1,340 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+.page-wrapper{display:flex;justify-content:center;margin:40px 0 60px;}
+.page-card{width:1280px;background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.10);padding:35px 40px;}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:28px;}
+.stat-card{background:#F7F8FB;border-radius:12px;padding:20px;}
+.stat-label{font-size:13px;color:#606060;font-weight:600;margin-bottom:8px;}
+.stat-value{font-size:28px;font-weight:700;color:#1B3E92;}
+.stat-card.danger .stat-value{color:#dc3545;}
+
+/* Filtros */
+.filter-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:28px;background:#F7F8FB;border-radius:12px;padding:18px 20px;}
+.filter-bar label{font-size:12px;font-weight:700;color:#606060;text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:4px;}
+.filter-bar select,.filter-bar input[type=text]{border:1px solid #d0d0d0;border-radius:8px;padding:9px 12px;font-family:'Montserrat',sans-serif;font-size:13px;color:#000;background:#fff;}
+.filter-bar select:focus,.filter-bar input[type=text]:focus{border-color:#289DFF;outline:none;}
+.btn-filter{background:#289DFF;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;height:38px;margin-top:18px;}
+.btn-filter:hover{background:#1B3E92;}
+.btn-clear{background:#9A979F;color:#fff;border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;text-decoration:none;display:inline-block;height:38px;line-height:1.2;margin-top:18px;}
+.btn-clear:hover{background:#606060;}
+.btn-export{background:#198754;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.btn-export:hover{background:#146c43;}
+/* Paginación */
+.pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:32px;flex-wrap:wrap;}
+.page-link{display:inline-block;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;border:1px solid #d0d0d0;color:#1B3E92;background:#fff;transition:all .2s;}
+.page-link:hover{background:#289DFF;color:#fff;border-color:#289DFF;}
+.page-link.active{background:#1B3E92;color:#fff;border-color:#1B3E92;pointer-events:none;}
+.page-link.disabled{color:#9A979F;pointer-events:none;}
+
+/* Tickets */
+.ticket-list{display:flex;flex-direction:column;gap:16px;}
+.ticket-item{border:1px solid #E5E5E5;border-radius:12px;padding:22px 24px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:box-shadow .2s;}
+.ticket-item:hover{box-shadow:0 4px 16px rgba(0,0,0,.10);}
+.ticket-item.overdue{border-left:4px solid #dc3545;}
+
+.ticket-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
+.ticket-id{font-size:13px;font-weight:700;color:#606060;margin-bottom:4px;}
+.ticket-title{font-size:20px;font-weight:700;color:#1B3E92;margin:0;}
+.ticket-user{font-size:14px;color:#606060;margin-top:6px;}
+
+.badges{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;}
+.badge{display:inline-block;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:700;color:#fff;}
+.badge-area{background:#289DFF;}
+.badge-status-pendiente{background:#9A979F;}
+.badge-status-proceso{background:#1B3E92;}
+.badge-status-cerrado{background:#606060;}
+
+.ticket-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:#606060;margin-top:10px;}
+.ticket-meta span{display:flex;align-items:center;gap:4px;}
+
+.actions{margin-top:14px;display:flex;justify-content:flex-end;}
+.btn-primary{background:#289DFF;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:600;text-decoration:none;display:inline-block;transition:all .2s;}
+.btn-primary:hover{background:#1B3E92;}
+
+.empty-state{text-align:center;padding:60px 20px;border:2px dashed #D9D9D9;border-radius:12px;background:#FAFAFA;}
+.empty-title{font-size:26px;font-weight:700;color:#1B3E92;margin-bottom:8px;}
+.empty-text{font-size:15px;color:#606060;}
+
+/* Checkboxes + bulk */
+.ticket-checkbox{width:18px;height:18px;cursor:pointer;accent-color:#289DFF;flex-shrink:0;margin-top:4px;}
+.bulk-toolbar{background:#1B3E92;color:#fff;border-radius:10px;padding:12px 20px;margin-bottom:16px;display:none;align-items:center;gap:12px;flex-wrap:wrap;}
+.bulk-toolbar.visible{display:flex;}
+.bulk-count{font-size:14px;font-weight:700;}
+.btn-bulk{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;}
+.btn-bulk:hover{background:rgba(255,255,255,.28);}
+.btn-bulk.danger{background:rgba(220,53,69,.6);}
+.btn-bulk.danger:hover{background:rgba(220,53,69,.9);}
+.select-all-row{display:flex;align-items:center;gap:8px;font-size:13px;color:#606060;margin-bottom:10px;cursor:pointer;user-select:none;}
+
+@media(max-width:1200px){.stats-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:1100px){.page-card{width:96%;padding:24px 18px;}}
+@media(max-width:700px){.stats-grid{grid-template-columns:repeat(2,1fr);}.ticket-top{flex-direction:column;}}
+</style>
+
+<div class="page-wrapper">
+<div class="page-card">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+        <div>
+            <h2 style="font-size:30px;font-weight:700;color:#1B3E92;margin:0 0 6px;">Panel de IT</h2>
+            <p style="font-size:15px;color:#606060;margin:0;">Gestione las solicitudes de OMA y Operador.</p>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <a href="{% url 'export_tickets_csv' %}" class="btn-export">⬇ Exportar CSV</a>
+            <a href="{% url 'it_stats' %}" class="btn-primary">Ver estadísticas →</a>
+        </div>
+    </div>
+
+    <!-- Tarjetas de resumen (siempre sobre el total) -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total tickets</div>
+            <div class="stat-value">{{ total }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Abiertos</div>
+            <div class="stat-value">{{ abiertos }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">En proceso</div>
+            <div class="stat-value">{{ en_proceso }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Resueltos</div>
+            <div class="stat-value">{{ resueltos }}</div>
+        </div>
+        <div class="stat-card {% if sla_vencidos > 0 %}danger{% endif %}">
+            <div class="stat-label">SLA vencidos</div>
+            <div class="stat-value">{{ sla_vencidos }}</div>
+        </div>
+        <div class="stat-card {% if sin_asignar > 0 %}danger{% endif %}">
+            <div class="stat-label">Sin asignar</div>
+            <div class="stat-value">{{ sin_asignar }}</div>
+        </div>
+    </div>
+
+    <!-- Barra de filtros + búsqueda -->
+    <form method="get" class="filter-bar">
+        <div style="flex:1;min-width:180px;">
+            <label>Buscar</label>
+            <input type="text" name="q" value="{{ filters.q }}" placeholder="Título, descripción, usuario…" style="width:100%;">
+        </div>
+        <div>
+            <label>Estado</label>
+            <select name="status">
+                <option value="">Todos</option>
+                {% for val, label in status_choices %}
+                    <option value="{{ val }}" {% if filters.status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Prioridad</label>
+            <select name="priority">
+                <option value="">Todas</option>
+                {% for val, label in priority_choices %}
+                    <option value="{{ val }}" {% if filters.priority == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Categoría</label>
+            <select name="category">
+                <option value="">Todas</option>
+                {% for val, label in category_choices %}
+                    <option value="{{ val }}" {% if filters.category == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Técnico</label>
+            <select name="assigned_to">
+                <option value="">Todos</option>
+                <option value="unassigned" {% if filters.assigned_to == "unassigned" %}selected{% endif %}>⚠ Sin asignar</option>
+                {% for tech in it_technicians %}
+                    <option value="{{ tech.pk }}" {% if filters.assigned_to == tech.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ tech.get_full_name|default:tech.username }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn-filter">Filtrar</button>
+        {% if filters.status or filters.priority or filters.category or filters.q or filters.assigned_to %}
+            <a href="{% url 'ticket_list' %}" class="btn-clear">Limpiar</a>
+        {% endif %}
+    </form>
+
+    <!-- Lista de tickets -->
+    {% if tickets %}
+    <form method="post" action="{% url 'bulk_action_tickets' %}" id="bulk-form">
+        {% csrf_token %}
+        <input type="hidden" name="bulk_action" id="bulk-action-input" value="">
+        <input type="hidden" name="filter_q"           value="{{ filters.q }}">
+        <input type="hidden" name="filter_status"      value="{{ filters.status }}">
+        <input type="hidden" name="filter_priority"    value="{{ filters.priority }}">
+        <input type="hidden" name="filter_category"    value="{{ filters.category }}">
+        <input type="hidden" name="filter_assigned_to" value="{{ filters.assigned_to }}">
+
+        <!-- Barra de acciones masivas (se muestra al seleccionar) -->
+        <div class="bulk-toolbar" id="bulk-toolbar">
+            <span class="bulk-count" id="bulk-count">0 seleccionados</span>
+            <button type="button" class="btn-bulk" onclick="setBulkAction('en_proceso')">▶ En proceso</button>
+            <button type="button" class="btn-bulk" onclick="setBulkAction('abierto')" style="background:rgba(255,255,255,.15);">↩ Abrir</button>
+            <button type="button" class="btn-bulk danger" onclick="setBulkAction('cerrar')">✓ Cerrar</button>
+            <select id="assign-select" onchange="if(this.value) setBulkAction('asignar_'+this.value)"
+                style="border-radius:8px;padding:8px 10px;font-family:'Montserrat',sans-serif;font-size:13px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);color:#fff;">
+                <option value="">Asignar a…</option>
+                {% for tech in it_technicians %}
+                    <option value="{{ tech.pk }}" style="color:#000;">
+                        {{ tech.get_full_name|default:tech.username }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Seleccionar todos -->
+        <label class="select-all-row">
+            <input type="checkbox" id="select-all" style="width:18px;height:18px;accent-color:#289DFF;cursor:pointer;">
+            Seleccionar todos en esta página
+        </label>
+
+        <div class="ticket-list">
+        {% for ticket in tickets %}
+            <div class="ticket-item {% if ticket.is_overdue %}overdue{% endif %}" style="display:flex;gap:14px;align-items:flex-start;">
+                <input type="checkbox" name="ticket_ids" value="{{ ticket.id }}" class="ticket-checkbox bulk-check" onchange="updateBulkToolbar()">
+                <div style="flex:1;min-width:0;">
+                <div class="ticket-top">
+                    <div>
+                        <div class="ticket-id">{{ ticket.ticket_number|default:ticket.id }}</div>
+                        <h3 class="ticket-title">{{ ticket.title }}</h3>
+                        <div class="ticket-user">
+                            Solicitante: <strong>{{ ticket.requester.get_full_name|default:ticket.requester.username }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="badges">
+                        <span class="badge badge-area">{{ ticket.area }}</span>
+                        <span class="badge {{ ticket.priority_css_class }}">{{ ticket.get_priority_display }}</span>
+
+                        {% if ticket.status == "ABIERTO" %}
+                            <span class="badge" style="background:#289DFF;">Abierto</span>
+                        {% elif ticket.status == "EN_PROCESO" %}
+                            <span class="badge badge-status-proceso">En progreso</span>
+                        {% elif ticket.status == "RESUELTO" %}
+                            <span class="badge" style="background:#198754;">Resuelto</span>
+                        {% elif ticket.status == "CERRADO" %}
+                            <span class="badge badge-status-cerrado">Cerrado</span>
+                        {% elif ticket.status == "REABIERTO" %}
+                            <span class="badge" style="background:#fd7e14;">Reabierto</span>
+                        {% else %}
+                            <span class="badge badge-status-pendiente">{{ ticket.get_status_display }}</span>
+                        {% endif %}
+
+                        {% if ticket.sla_met is True %}
+                            <span class="badge sla-ok">SLA cumplido</span>
+                        {% elif ticket.sla_met is False %}
+                            <span class="badge sla-vencido">SLA vencido</span>
+                        {% elif ticket.is_overdue %}
+                            <span class="badge sla-vencido">SLA vencido</span>
+                        {% elif ticket.sla_deadline %}
+                            <span class="badge sla-pending">SLA {{ ticket.sla_deadline|date:"d/m H:i" }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="ticket-meta">
+                    <span>📂 {{ ticket.get_category_display }}</span>
+                    {% if ticket.assigned_to %}
+                        <span>👤 {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}</span>
+                    {% else %}
+                        <span style="color:#fd7e14;">⚠ Sin asignar</span>
+                    {% endif %}
+                    <span>🕐 {{ ticket.created_at|date:"d/m/Y H:i" }}</span>
+                </div>
+
+                <div class="actions">
+                    <a href="{% url 'respond_ticket' ticket.id %}" class="btn-primary">Ver / Gestionar</a>
+                </div>
+                </div>{# fin flex wrapper #}
+            </div>{# fin ticket-item #}
+        {% endfor %}
+        </div>{# fin ticket-list #}
+    </form>
+
+        <!-- Paginación -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% with q=filters.q s=filters.status p=filters.priority c=filters.category a=filters.assigned_to %}
+            {% if page_obj.has_previous %}
+                <a href="?{% if q %}q={{ q }}&{% endif %}{% if s %}status={{ s }}&{% endif %}{% if p %}priority={{ p }}&{% endif %}{% if c %}category={{ c }}&{% endif %}{% if a %}assigned_to={{ a }}&{% endif %}page={{ page_obj.previous_page_number }}" class="page-link">← Anterior</a>
+            {% else %}
+                <span class="page-link disabled">← Anterior</span>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="page-link active">{{ num }}</span>
+                {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                    <a href="?{% if q %}q={{ q }}&{% endif %}{% if s %}status={{ s }}&{% endif %}{% if p %}priority={{ p }}&{% endif %}{% if c %}category={{ c }}&{% endif %}{% if a %}assigned_to={{ a }}&{% endif %}page={{ num }}" class="page-link">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?{% if q %}q={{ q }}&{% endif %}{% if s %}status={{ s }}&{% endif %}{% if p %}priority={{ p }}&{% endif %}{% if c %}category={{ c }}&{% endif %}{% if a %}assigned_to={{ a }}&{% endif %}page={{ page_obj.next_page_number }}" class="page-link">Siguiente →</a>
+            {% else %}
+                <span class="page-link disabled">Siguiente →</span>
+            {% endif %}
+            {% endwith %}
+        </div>
+        <p style="text-align:center;font-size:13px;color:#9A979F;margin-top:10px;">
+            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }} — {{ page_obj.paginator.count }} ticket(s)
+        </p>
+        {% endif %}
+
+    {% else %}
+
+        <div class="empty-state">
+            <div class="empty-title">Sin tickets{% if filters.status or filters.priority or filters.category or filters.q %} para estos filtros{% endif %}</div>
+            <div class="empty-text">{% if filters.status or filters.priority or filters.category or filters.q %}Prueba con otros criterios de búsqueda.{% else %}Cuando los usuarios envíen solicitudes aparecerán aquí.{% endif %}</div>
+        </div>
+    {% endif %}
+
+</div>
+</div>
+
+<script>
+function updateBulkToolbar() {
+    const checked = document.querySelectorAll(".bulk-check:checked");
+    const toolbar = document.getElementById("bulk-toolbar");
+    const count   = document.getElementById("bulk-count");
+    const assignSel = document.getElementById("assign-select");
+    if (checked.length > 0) {
+        toolbar.classList.add("visible");
+        count.textContent = checked.length + " seleccionado" + (checked.length > 1 ? "s" : "");
+    } else {
+        toolbar.classList.remove("visible");
+        if (assignSel) assignSel.value = "";
+    }
+}
+
+function setBulkAction(action) {
+    const checked = document.querySelectorAll(".bulk-check:checked");
+    if (checked.length === 0) return;
+    document.getElementById("bulk-action-input").value = action;
+    document.getElementById("bulk-form").submit();
+}
+
+const selectAll = document.getElementById("select-all");
+if (selectAll) {
+    selectAll.addEventListener("change", function() {
+        document.querySelectorAll(".bulk-check").forEach(cb => {
+            cb.checked = this.checked;
+        });
+        updateBulkToolbar();
+    });
+}
+</script>
+{% endblock %}

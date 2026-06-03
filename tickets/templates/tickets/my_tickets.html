@@ -1,0 +1,397 @@
+{% extends "tickets/base.html" %}
+
+{% block content %}
+
+<style>
+.page-wrapper{
+    display:flex;
+    justify-content:center;
+    margin-top:50px;
+    margin-bottom:50px;
+}
+
+.page-card{
+    width:1100px;
+    background:#FFFFFF;
+    border-radius:14px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.10);
+    padding:35px 40px;
+}
+
+.page-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:20px;
+    margin-bottom:30px;
+}
+
+.page-title{
+    font-size:34px;
+    font-weight:700;
+    color:#1B3E92;
+    margin:0 0 8px 0;
+}
+
+.page-subtitle{
+    font-size:16px;
+    color:#606060;
+    margin:0;
+}
+
+.area-pill{
+    display:inline-block;
+    margin-top:12px;
+    background:#289DFF;
+    color:#FFFFFF;
+    padding:8px 16px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:700;
+}
+
+.btn-primary{
+    background:#289DFF;
+    color:#FFFFFF;
+    border:none;
+    border-radius:10px;
+    padding:14px 22px;
+    font-size:15px;
+    font-weight:600;
+    text-decoration:none;
+    display:inline-block;
+    transition:all .2s ease;
+}
+
+.btn-primary:hover{
+    background:#1B3E92;
+}
+
+.empty-state{
+    text-align:center;
+    padding:60px 20px;
+    border:2px dashed #D9D9D9;
+    border-radius:14px;
+    background:#FAFAFA;
+}
+
+.empty-title{
+    font-size:28px;
+    font-weight:700;
+    color:#1B3E92;
+    margin-bottom:10px;
+}
+
+.empty-text{
+    font-size:16px;
+    color:#606060;
+    margin-bottom:24px;
+}
+
+.ticket-list{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.ticket-item{
+    border:1px solid #E5E5E5;
+    border-radius:14px;
+    padding:24px;
+    background:#FFFFFF;
+    box-shadow:0 3px 10px rgba(0,0,0,0.04);
+}
+
+.ticket-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:20px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+}
+
+.ticket-id{
+    font-size:14px;
+    font-weight:700;
+    color:#606060;
+    margin-bottom:6px;
+}
+
+.ticket-title{
+    font-size:24px;
+    font-weight:700;
+    color:#1B3E92;
+    margin:0;
+}
+
+.badges{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.badge{
+    display:inline-block;
+    padding:8px 14px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:700;
+    color:#FFFFFF;
+}
+
+.badge-area{
+    background:#289DFF;
+}
+
+.badge-status-abierto{background:#289DFF;}
+.badge-status-proceso{background:#1B3E92;}
+.badge-status-resuelto{background:#198754;}
+.badge-status-cerrado{background:#606060;}
+.badge-status-reabierto{background:#fd7e14;}
+
+.ticket-grid{
+    display:grid;
+    grid-template-columns: repeat(2, minmax(250px, 1fr));
+    gap:18px;
+    margin-top:18px;
+}
+
+.info-block{
+    background:#F7F8FB;
+    border-radius:12px;
+    padding:16px;
+}
+
+.info-label{
+    font-size:13px;
+    font-weight:700;
+    color:#606060;
+    margin-bottom:6px;
+    text-transform:uppercase;
+    letter-spacing:.3px;
+}
+
+.info-value{
+    font-size:15px;
+    color:#000000;
+    line-height:1.5;
+    word-break:break-word;
+}
+
+.response-box{
+    margin-top:18px;
+    background:#EEF6FF;
+    border-left:5px solid #289DFF;
+    border-radius:10px;
+    padding:18px;
+}
+
+.response-title{
+    font-size:15px;
+    font-weight:700;
+    color:#1B3E92;
+    margin-bottom:8px;
+}
+
+.response-text{
+    font-size:15px;
+    color:#000000;
+    line-height:1.6;
+}
+
+.waiting-box{
+    margin-top:18px;
+    background:#F5F5F5;
+    border-left:5px solid #9A979F;
+    border-radius:10px;
+    padding:18px;
+}
+
+.waiting-title{
+    font-size:15px;
+    font-weight:700;
+    color:#606060;
+    margin-bottom:8px;
+}
+
+.waiting-text{
+    font-size:15px;
+    color:#606060;
+    line-height:1.6;
+}
+
+.respondido-si{
+    color:#1B3E92;
+    font-weight:700;
+}
+
+.respondido-no{
+    color:#9A979F;
+    font-weight:700;
+}
+
+.pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:32px;flex-wrap:wrap;}
+.page-link{display:inline-block;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;border:1px solid #d0d0d0;color:#1B3E92;background:#fff;transition:all .2s;}
+.page-link:hover{background:#289DFF;color:#fff;border-color:#289DFF;}
+.page-link.active{background:#1B3E92;color:#fff;border-color:#1B3E92;pointer-events:none;}
+.page-link.disabled{color:#9A979F;pointer-events:none;}
+
+@media (max-width: 900px){
+    .page-card{
+        width:92%;
+        padding:25px 20px;
+    }
+
+    .page-title{
+        font-size:28px;
+    }
+
+    .ticket-title{
+        font-size:20px;
+    }
+
+    .ticket-grid{
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<div class="page-wrapper">
+    <div class="page-card">
+
+        <div class="page-header">
+            <div>
+                <h2 class="page-title">Mis tickets</h2>
+                <p class="page-subtitle">Aquí puedes ver todas las solicitudes que has creado, su estado y la respuesta del equipo de IT.</p>
+                {% if current_area %}
+                    <span class="area-pill">{{ current_area }}</span>
+                {% endif %}
+            </div>
+
+            <a href="{% url 'create_ticket' %}" class="btn-primary">Crear nuevo ticket</a>
+        </div>
+
+        {% if tickets %}
+            <div class="ticket-list">
+                {% for ticket in tickets %}
+                    <div class="ticket-item">
+
+                        <div class="ticket-top">
+                            <div>
+                                <div class="ticket-id">{{ ticket.ticket_number|default:ticket.id }}</div>
+                                <h3 class="ticket-title">{{ ticket.title }}</h3>
+                            </div>
+
+                            <div class="badges">
+                                <span class="badge badge-area">{{ ticket.area }}</span>
+
+                                {% if ticket.status == "ABIERTO" %}
+                                    <span class="badge badge-status-abierto">Abierto</span>
+                                {% elif ticket.status == "EN_PROCESO" %}
+                                    <span class="badge badge-status-proceso">En progreso</span>
+                                {% elif ticket.status == "RESUELTO" %}
+                                    <span class="badge badge-status-resuelto">Resuelto</span>
+                                {% elif ticket.status == "CERRADO" %}
+                                    <span class="badge badge-status-cerrado">Cerrado</span>
+                                {% elif ticket.status == "REABIERTO" %}
+                                    <span class="badge badge-status-reabierto">Reabierto</span>
+                                {% else %}
+                                    <span class="badge badge-status-abierto">{{ ticket.get_status_display }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="ticket-grid">
+                            <div class="info-block">
+                                <div class="info-label">Descripción</div>
+                                <div class="info-value">{{ ticket.description|linebreaksbr }}</div>
+                            </div>
+
+                            <div class="info-block">
+                                <div class="info-label">Respondido</div>
+                                <div class="info-value">
+                                    {% if ticket.responded %}
+                                        <span class="respondido-si">Sí</span>
+                                    {% else %}
+                                        <span class="respondido-no">No</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="info-block">
+                                <div class="info-label">Fecha de creación</div>
+                                <div class="info-value">{{ ticket.created_at|date:"d/m/Y H:i" }}</div>
+                            </div>
+
+                            <div class="info-block">
+                                <div class="info-label">Última actualización</div>
+                                <div class="info-value">{{ ticket.updated_at|date:"d/m/Y H:i" }}</div>
+                            </div>
+                        </div>
+
+                        {% if ticket.response %}
+                            <div class="response-box">
+                                <div class="response-title">Respuesta del equipo de IT</div>
+                                <div class="response-text">{{ ticket.response|linebreaksbr }}</div>
+                            </div>
+                        {% else %}
+                            <div class="waiting-box">
+                                <div class="waiting-title">Aún sin respuesta</div>
+                                <div class="waiting-text">Tu ticket fue recibido y está pendiente de gestión por parte del equipo de IT.</div>
+                            </div>
+                        {% endif %}
+
+                        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                            <a href="{% url 'user_ticket_detail' ticket.pk %}" class="btn-primary" style="font-size:13px;padding:9px 18px;">Ver detalle →</a>
+                            {% if ticket.status == "RESUELTO" %}
+                            <form method="post" action="{% url 'reopen_ticket' ticket.pk %}" style="display:inline;" onsubmit="return confirm('¿Deseas reabrir este ticket?');">
+                                {% csrf_token %}
+                                <button type="submit" style="background:#fd7e14;color:#fff;border:none;border-radius:10px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;">Reabrir ticket</button>
+                            </form>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                {% endfor %}
+            </div>
+            {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="page-link">← Anterior</a>
+                {% else %}
+                    <span class="page-link disabled">← Anterior</span>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="page-link active">{{ num }}</span>
+                    {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                        <a href="?page={{ num }}" class="page-link">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="page-link">Siguiente →</a>
+                {% else %}
+                    <span class="page-link disabled">Siguiente →</span>
+                {% endif %}
+            </div>
+            <p style="text-align:center;font-size:13px;color:#9A979F;margin-top:10px;">
+                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }} — {{ page_obj.paginator.count }} ticket(s)
+            </p>
+            {% endif %}
+
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-title">Aún no has creado tickets</div>
+                <div class="empty-text">Cuando envíes una solicitud, aparecerá aquí junto con su estado y la respuesta del equipo de IT.</div>
+                <a href="{% url 'create_ticket' %}" class="btn-primary">Crear mi primer ticket</a>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

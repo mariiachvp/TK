@@ -1,0 +1,105 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAS Cargo IT Service Desk</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *{box-sizing:border-box;}
+        body{margin:0;font-family:'Montserrat',sans-serif;background:#eef0f4;color:#000;}
+
+        /* ── Topbar ── */
+        .topbar{background:#1B3E92;color:#fff;padding:18px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+        .brand{font-size:22px;font-weight:700;color:#fff;text-decoration:none;}
+        .nav-links{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+        .nav-btn{text-decoration:none;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;transition:all .2s;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);}
+        .nav-btn:hover{background:#289DFF;border-color:#289DFF;}
+        .nav-btn.active{background:#289DFF;border-color:#289DFF;}
+        .nav-form{display:inline;margin:0;}
+        .nav-form button{cursor:pointer;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;color:#fff;padding:9px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);transition:all .2s;}
+        .nav-form button:hover{background:#dc3545;border-color:#dc3545;}
+
+        /* ── Layout ── */
+        .page-content{padding:0 20px 40px 20px;}
+
+        /* ── Prioridades ── */
+        .priority-low{background:#6c757d;}
+        .priority-medium{background:#289DFF;}
+        .priority-high{background:#fd7e14;}
+        .priority-critical{background:#dc3545;}
+
+        /* ── SLA badges ── */
+        .sla-ok{background:#198754;}
+        .sla-vencido{background:#dc3545;}
+        .sla-warning{background:#fd7e14;}
+        .sla-pending{background:#9A979F;}
+
+        /* ── Mensajes del sistema ── */
+        .messages-bar{padding:0 20px;}
+        .alert{padding:14px 20px;border-radius:10px;font-size:14px;font-weight:600;margin:14px 0 0;display:flex;align-items:center;gap:10px;}
+        .alert-success{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;}
+        .alert-error{background:#fee2e2;color:#991b1b;border:1px solid #fecaca;}
+        .alert-warning{background:#fef3c7;color:#92400e;border:1px solid #fde68a;}
+        .alert-info{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe;}
+
+        @media(max-width:768px){
+            .topbar{padding:14px 16px;}
+            .brand{font-size:18px;}
+            .nav-links{width:100%;}
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <a href="{% url 'home' %}" class="brand">LAS Cargo IT Service Desk</a>
+
+    <div class="nav-links">
+        {% if request.user.is_authenticated %}
+            {% with profile=request.user.profile %}
+
+            {% if not profile.is_it_staff %}
+                <a href="{% url 'create_ticket' %}" class="nav-btn {% if request.resolver_match.url_name == 'create_ticket' %}active{% endif %}">Crear ticket</a>
+                <a href="{% url 'my_tickets' %}"    class="nav-btn {% if request.resolver_match.url_name == 'my_tickets' %}active{% endif %}">Mis tickets</a>
+            {% endif %}
+
+            {% if profile.is_it_staff %}
+                <a href="{% url 'ticket_list' %}"           class="nav-btn {% if request.resolver_match.url_name == 'ticket_list' %}active{% endif %}">Panel IT</a>
+                <a href="{% url 'technician_dashboard' %}"  class="nav-btn {% if request.resolver_match.url_name == 'technician_dashboard' %}active{% endif %}">Mi dashboard</a>
+                <a href="{% url 'it_stats' %}"              class="nav-btn {% if request.resolver_match.url_name == 'it_stats' %}active{% endif %}">Estadísticas</a>
+                <a href="{% url 'executive_dashboard' %}"   class="nav-btn {% if request.resolver_match.url_name == 'executive_dashboard' %}active{% endif %}">Ejecutivo</a>
+                {% if request.user.is_superuser or profile.can_manage_users %}
+                <a href="{% url 'user_list' %}"             class="nav-btn {% if 'user_' in request.resolver_match.url_name %}active{% endif %}">Usuarios</a>
+                {% endif %}
+                <a href="{% url 'role_list' %}"             class="nav-btn {% if 'role_' in request.resolver_match.url_name %}active{% endif %}">Roles</a>
+                <a href="{% url 'routing_rule_list' %}"     class="nav-btn {% if 'routing_rule' in request.resolver_match.url_name %}active{% endif %}">Reglas</a>
+                <a href="{% url 'category_list' %}"         class="nav-btn {% if 'category_' in request.resolver_match.url_name %}active{% endif %}">Categorías</a>
+                <a href="{% url 'audit_log' %}"             class="nav-btn {% if request.resolver_match.url_name == 'audit_log' %}active{% endif %}">Auditoría</a>
+            {% endif %}
+
+            {% endwith %}
+
+            <form method="post" action="{% url 'logout' %}" class="nav-form">
+                {% csrf_token %}
+                <button type="submit">Cerrar sesión</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if messages %}
+<div class="messages-bar">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="page-content">
+    {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

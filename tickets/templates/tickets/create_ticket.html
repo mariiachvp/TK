@@ -1,0 +1,71 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+.ticket-wrapper{display:flex;justify-content:center;margin-top:50px;}
+.ticket-card{width:720px;background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.10);padding:35px 40px;}
+.ticket-title{font-size:30px;font-weight:700;color:#1B3E92;margin:0 0 8px;}
+.ticket-subtitle{font-size:15px;color:#606060;margin:0;}
+.area-badge{display:inline-block;margin-top:12px;background:#289DFF;color:#fff;padding:7px 16px;border-radius:999px;font-weight:600;font-size:13px;}
+
+.form-group{margin-bottom:22px;}
+.form-group label{display:block;font-size:14px;font-weight:600;color:#1B3E92;margin-bottom:7px;}
+.help-text{font-size:12px;color:#606060;margin-top:5px;}
+.errorlist{margin:6px 0 0;padding-left:18px;color:#c62828;font-size:13px;}
+
+.actions{display:flex;justify-content:space-between;align-items:center;margin-top:28px;gap:12px;}
+.btn-secondary,.btn-primary{border:none;border-radius:10px;padding:13px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;text-decoration:none;display:inline-block;transition:all .2s;}
+.btn-secondary{background:#9A979F;color:#fff;}
+.btn-secondary:hover{background:#606060;}
+.btn-primary{background:#289DFF;color:#fff;}
+.btn-primary:hover{background:#1B3E92;}
+
+@media(max-width:800px){.ticket-card{width:96%;padding:24px 18px;}.actions{flex-direction:column;align-items:stretch;}.btn-secondary,.btn-primary{width:100%;text-align:center;}}
+</style>
+
+<div class="ticket-wrapper">
+<div class="ticket-card">
+
+    <h2 class="ticket-title">Crear ticket</h2>
+    <p class="ticket-subtitle">Complete la información para que IT reciba y gestione su solicitud.</p>
+    <div class="area-badge">{{ area }}</div>
+
+    <form method="post" style="margin-top:28px;">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
+            {{ form.category }}
+            <div class="help-text">Seleccione el tipo de problema más cercano a su situación.</div>
+            {% if form.category.errors %}{{ form.category.errors }}{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.priority.id_for_label }}">{{ form.priority.label }}</label>
+            {{ form.priority }}
+            <div class="help-text">Baja: afecta productividad menor · Media: bloqueante parcial · Alta: crítico para el trabajo · Crítica: servicio caído.</div>
+            {% if form.priority.errors %}{{ form.priority.errors }}{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+            {{ form.title }}
+            <div class="help-text">Escriba un resumen corto y claro del inconveniente.</div>
+            {% if form.title.errors %}{{ form.title.errors }}{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+            {{ form.description }}
+            <div class="help-text">Incluya: desde cuándo ocurre, equipo afectado, mensaje de error exacto si hay.</div>
+            {% if form.description.errors %}{{ form.description.errors }}{% endif %}
+        </div>
+
+        <div class="actions">
+            <a href="{% url 'home' %}" class="btn-secondary">Volver</a>
+            <button type="submit" class="btn-primary">Enviar ticket</button>
+        </div>
+    </form>
+
+</div>
+</div>
+{% endblock %}

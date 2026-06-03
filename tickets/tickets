@@ -1,0 +1,15 @@
+server {
+    listen 80;
+    server_name 192.168.1.168;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+
+    location /static/ {
+        alias /var/www/tickets/ticket-it/lascargo_it/static/;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/var/www/tickets/tickets.sock;
+    }
+}

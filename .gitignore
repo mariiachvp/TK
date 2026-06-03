@@ -1,0 +1,38 @@
+# Entorno virtual
+venv/
+.venv/
+env/
+
+# Variables de entorno — NUNCA subir a git
+.env
+*.env
+
+# Base de datos local
+db.sqlite3
+
+# Archivos estáticos compilados
+staticfiles/
+
+# Logs
+logs/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Migraciones no comprometidas (opcional — quitar si el equipo las comparte)
+# tickets/migrations/

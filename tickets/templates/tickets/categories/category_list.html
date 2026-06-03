@@ -1,0 +1,89 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+.page-wrapper{display:flex;justify-content:center;margin:40px 0 60px;}
+.page-card{width:900px;background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.10);padding:35px 40px;}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
+.page-title{font-size:28px;font-weight:700;color:#1B3E92;margin:0;}
+.btn-primary{background:#289DFF;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:600;text-decoration:none;display:inline-block;cursor:pointer;font-family:'Montserrat',sans-serif;}
+.btn-primary:hover{background:#1B3E92;}
+.cat-table{width:100%;border-collapse:collapse;font-size:13px;}
+.cat-table th{text-align:left;padding:10px 14px;font-size:11px;font-weight:700;color:#606060;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid #eef0f4;background:#F7F8FB;}
+.cat-table td{padding:13px 14px;border-bottom:1px solid #f3f4f6;vertical-align:middle;}
+.cat-table tr:hover td{background:#fafafa;}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;color:#fff;}
+.pill-on{background:#198754;}
+.pill-off{background:#9A979F;}
+.btn-sm{background:#289DFF;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;text-decoration:none;display:inline-block;font-family:'Montserrat',sans-serif;}
+.btn-sm:hover{background:#1B3E92;}
+.btn-toggle{border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;color:#fff;}
+.btn-toggle.on{background:#9A979F;}
+.btn-toggle.on:hover{background:#6c757d;}
+.btn-toggle.off{background:#198754;}
+.btn-toggle.off:hover{background:#146c43;}
+.empty-row{text-align:center;padding:40px;color:#9A979F;}
+@media(max-width:900px){.page-card{width:96%;padding:24px 16px;}}
+</style>
+
+<div class="page-wrapper">
+<div class="page-card">
+
+    <div class="page-header">
+        <h2 class="page-title">Categorías de ticket</h2>
+        <a href="{% url 'category_create' %}" class="btn-primary">+ Nueva categoría</a>
+    </div>
+
+    <p style="font-size:13px;color:#606060;margin:0 0 24px;">
+        Las categorías activas aparecen en el formulario de creación de tickets. Desactiva las que no uses.
+    </p>
+
+    <table class="cat-table">
+        <thead>
+            <tr>
+                <th>Orden</th>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for cat in categories %}
+            <tr>
+                <td style="color:#9A979F;font-weight:600;">{{ cat.order }}</td>
+                <td><code style="background:#F7F8FB;padding:2px 8px;border-radius:4px;font-size:12px;">{{ cat.code }}</code></td>
+                <td><strong>{{ cat.name }}</strong></td>
+                <td style="color:#606060;max-width:220px;">{{ cat.description|truncatechars:60 }}</td>
+                <td>
+                    {% if cat.is_active %}
+                        <span class="pill pill-on">Activa</span>
+                    {% else %}
+                        <span class="pill pill-off">Inactiva</span>
+                    {% endif %}
+                </td>
+                <td style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <a href="{% url 'category_edit' cat.pk %}" class="btn-sm">Editar</a>
+                    <form method="post" action="{% url 'category_toggle' cat.pk %}" style="display:inline;">
+                        {% csrf_token %}
+                        {% if cat.is_active %}
+                            <button type="submit" class="btn-toggle on">Desactivar</button>
+                        {% else %}
+                            <button type="submit" class="btn-toggle off">Activar</button>
+                        {% endif %}
+                    </form>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6" class="empty-row">No hay categorías registradas. <a href="{% url 'category_create' %}">Crear la primera.</a></td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="margin-top:24px;">
+        <a href="{% url 'ticket_list' %}" style="font-size:13px;font-weight:600;color:#9A979F;text-decoration:none;">← Panel IT</a>
+    </div>
+
+</div>
+</div>
+{% endblock %}

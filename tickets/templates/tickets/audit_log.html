@@ -1,0 +1,258 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+.page-wrapper{display:flex;justify-content:center;margin:40px 0 60px;}
+.page-card{width:1200px;background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.10);padding:35px 40px;}
+.page-title{font-size:28px;font-weight:700;color:#1B3E92;margin:0 0 4px;}
+.page-subtitle{font-size:14px;color:#606060;margin:0 0 28px;}
+
+/* Tabs */
+.tab-bar{display:flex;gap:0;border-bottom:2px solid #e5e7eb;margin-bottom:24px;}
+.tab{padding:10px 22px;font-size:14px;font-weight:600;color:#606060;text-decoration:none;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.tab:hover{color:#1B3E92;}
+.tab.active{color:#1B3E92;border-bottom-color:#289DFF;}
+.tab-count{display:inline-block;background:#EEF6FF;color:#1B3E92;border-radius:999px;font-size:11px;font-weight:700;padding:1px 7px;margin-left:6px;}
+
+/* Filter bar */
+.filter-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:24px;background:#F7F8FB;border-radius:12px;padding:16px 20px;}
+.filter-bar label{font-size:12px;font-weight:700;color:#606060;text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:4px;}
+.filter-bar select,.filter-bar input{border:1px solid #d0d0d0;border-radius:8px;padding:8px 12px;font-family:'Montserrat',sans-serif;font-size:13px;color:#000;background:#fff;}
+.filter-bar select:focus,.filter-bar input:focus{border-color:#289DFF;outline:none;}
+.btn-filter{background:#289DFF;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;margin-top:18px;}
+.btn-filter:hover{background:#1B3E92;}
+.btn-clear{background:#9A979F;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;text-decoration:none;display:inline-block;margin-top:18px;}
+.btn-clear:hover{background:#606060;}
+
+/* Table */
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{background:#F7F8FB;padding:11px 14px;text-align:left;font-size:11px;font-weight:700;color:#606060;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid #e5e7eb;}
+td{padding:12px 14px;color:#333;border-bottom:1px solid #f3f4f6;vertical-align:top;}
+tr:hover td{background:#fafafa;}
+.ticket-link{color:#1B3E92;font-weight:700;text-decoration:none;}
+.ticket-link:hover{text-decoration:underline;}
+code{background:#f3f4f6;border-radius:4px;padding:2px 6px;font-size:11px;color:#374151;}
+
+/* Action badges */
+.abadge{display:inline-block;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;}
+.abadge-created{background:#d1fae5;color:#065f46;}
+.abadge-status_change{background:#dbeafe;color:#1e40af;}
+.abadge-responded{background:#e0e7ff;color:#3730a3;}
+.abadge-field_change{background:#fef3c7;color:#92400e;}
+.abadge-escalated{background:#ffedd5;color:#9a3412;}
+.abadge-reopened{background:#fef3c7;color:#92400e;}
+.abadge-assigned{background:#d1fae5;color:#065f46;}
+.abadge-reassigned{background:#dbeafe;color:#1e40af;}
+.abadge-comment_added{background:#f3f4f6;color:#374151;}
+.abadge-attachment_added{background:#d1fae5;color:#065f46;}
+.abadge-attachment_deleted{background:#fee2e2;color:#991b1b;}
+.abadge-login{background:#d1fae5;color:#065f46;}
+.abadge-logout{background:#f3f4f6;color:#374151;}
+.abadge-login_failed{background:#fee2e2;color:#991b1b;}
+.abadge-user_created{background:#d1fae5;color:#065f46;}
+.abadge-user_updated{background:#dbeafe;color:#1e40af;}
+.abadge-user_deactivated{background:#fee2e2;color:#991b1b;}
+.abadge-user_activated{background:#d1fae5;color:#065f46;}
+.abadge-password_changed{background:#fef3c7;color:#92400e;}
+
+/* Pagination */
+.pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:28px;flex-wrap:wrap;}
+.page-link{display:inline-block;padding:7px 13px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;border:1px solid #d0d0d0;color:#1B3E92;background:#fff;}
+.page-link:hover{background:#289DFF;color:#fff;border-color:#289DFF;}
+.page-link.active{background:#1B3E92;color:#fff;border-color:#1B3E92;pointer-events:none;}
+.page-link.disabled{color:#9A979F;pointer-events:none;}
+
+.empty-row td{text-align:center;color:#9A979F;padding:40px;font-size:14px;}
+
+@media(max-width:1100px){.page-card{width:96%;padding:24px 16px;}}
+</style>
+
+<div class="page-wrapper">
+<div class="page-card">
+
+    <h2 class="page-title">Registro de auditoría</h2>
+    <p class="page-subtitle">Historial completo e inmutable de todas las acciones del sistema.</p>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+        <a href="?tipo=ticket{% if filters.action %}&action={{ filters.action }}{% endif %}{% if filters.user %}&user={{ filters.user }}{% endif %}{% if filters.date_from %}&date_from={{ filters.date_from }}{% endif %}{% if filters.date_to %}&date_to={{ filters.date_to }}{% endif %}"
+           class="tab {% if log_type == 'ticket' %}active{% endif %}">
+            Tickets <span class="tab-count">{{ total_ticket_logs }}</span>
+        </a>
+        <a href="?tipo=sistema{% if filters.action %}&action={{ filters.action }}{% endif %}{% if filters.user %}&user={{ filters.user }}{% endif %}{% if filters.date_from %}&date_from={{ filters.date_from }}{% endif %}{% if filters.date_to %}&date_to={{ filters.date_to }}{% endif %}"
+           class="tab {% if log_type == 'sistema' %}active{% endif %}">
+            Sistema <span class="tab-count">{{ total_system_logs }}</span>
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <form method="get" class="filter-bar">
+        <input type="hidden" name="tipo" value="{{ log_type }}">
+        <div>
+            <label>Acción</label>
+            <select name="action">
+                <option value="">Todas</option>
+                {% for val, label in action_choices %}
+                    <option value="{{ val }}" {% if filters.action == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Usuario</label>
+            <input type="text" name="user" value="{{ filters.user }}" placeholder="Nombre o usuario…" style="min-width:160px;">
+        </div>
+        <div>
+            <label>Desde</label>
+            <input type="date" name="date_from" value="{{ filters.date_from }}">
+        </div>
+        <div>
+            <label>Hasta</label>
+            <input type="date" name="date_to" value="{{ filters.date_to }}">
+        </div>
+        <button type="submit" class="btn-filter">Filtrar</button>
+        {% if filters.action or filters.user or filters.date_from or filters.date_to %}
+            <a href="?tipo={{ log_type }}" class="btn-clear">Limpiar</a>
+        {% endif %}
+    </form>
+
+    {% if log_type == "ticket" %}
+    <!-- ===== AUDITORÍA DE TICKETS ===== -->
+    <table>
+        <thead>
+            <tr>
+                <th style="min-width:130px;">Fecha</th>
+                <th style="min-width:100px;">Ticket</th>
+                <th style="min-width:130px;">Acción</th>
+                <th>Detalle</th>
+                <th style="min-width:130px;">Usuario</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for log in logs %}
+            <tr>
+                <td style="color:#606060;font-size:12px;">{{ log.timestamp|date:"d/m/Y H:i" }}</td>
+                <td>
+                    {% if log.ticket %}
+                        <a href="{% url 'respond_ticket' log.ticket.pk %}" class="ticket-link">
+                            {{ log.ticket.ticket_number|default:log.ticket.pk }}
+                        </a>
+                    {% else %}—{% endif %}
+                </td>
+                <td>
+                    <span class="abadge abadge-{{ log.action|lower }}">{{ log.get_action_display }}</span>
+                </td>
+                <td>
+                    {% if log.action == "CREATED" %}
+                        "{{ log.new_value }}"
+                    {% elif log.action == "STATUS_CHANGE" %}
+                        <strong>{{ log.old_value }}</strong> → <strong>{{ log.new_value }}</strong>
+                    {% elif log.action == "RESPONDED" %}
+                        Respuesta formal registrada
+                    {% elif log.action == "FIELD_CHANGE" %}
+                        {% if log.field == "priority" or log.field == "category" %}
+                            {{ log.field|capfirst }}: <strong>{{ log.old_value }}</strong> → <strong>{{ log.new_value }}</strong>
+                        {% else %}
+                            {{ log.field }}: <strong>{{ log.old_value }}</strong> → <strong>{{ log.new_value }}</strong>
+                        {% endif %}
+                    {% elif log.action == "ASSIGNED" %}
+                        → <strong>{{ log.new_value }}</strong>
+                    {% elif log.action == "REASSIGNED" %}
+                        <strong>{{ log.old_value }}</strong> → <strong>{{ log.new_value }}</strong>
+                    {% elif log.action == "ESCALATED" %}
+                        {% with ov=log.old_value nv=log.new_value %}
+                        <strong>{% if ov == "LOW" %}Baja{% elif ov == "MEDIUM" %}Media{% elif ov == "HIGH" %}Alta{% elif ov == "CRITICAL" %}Crítica{% else %}{{ ov }}{% endif %}</strong>
+                        →
+                        <strong>{% if nv == "LOW" %}Baja{% elif nv == "MEDIUM" %}Media{% elif nv == "HIGH" %}Alta{% elif nv == "CRITICAL" %}Crítica{% else %}{{ nv }}{% endif %}</strong>
+                        {% endwith %}
+                    {% elif log.action == "REOPENED" %}
+                        Ticket reabierto por el usuario
+                    {% elif log.action == "COMMENT_ADDED" %}
+                        {{ log.new_value|truncatechars:80 }}
+                    {% elif log.action == "ATTACHMENT_ADDED" %}
+                        Subido: <em>{{ log.new_value }}</em>
+                    {% elif log.action == "ATTACHMENT_DELETED" %}
+                        Eliminado: <em>{{ log.old_value }}</em>
+                    {% else %}
+                        {% if log.old_value or log.new_value %}{{ log.old_value }} → {{ log.new_value }}{% else %}—{% endif %}
+                    {% endif %}
+                </td>
+                <td style="color:#606060;">{{ log.user.get_full_name|default:log.user.username|default:"Sistema" }}</td>
+            </tr>
+        {% empty %}
+            <tr class="empty-row"><td colspan="5">Sin registros para estos filtros.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {% else %}
+    <!-- ===== AUDITORÍA DE SISTEMA ===== -->
+    <table>
+        <thead>
+            <tr>
+                <th style="min-width:130px;">Fecha</th>
+                <th style="min-width:140px;">Acción</th>
+                <th>Actor</th>
+                <th>Usuario afectado</th>
+                <th>IP</th>
+                <th>Detalles</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for log in logs %}
+            <tr>
+                <td style="color:#606060;font-size:12px;">{{ log.timestamp|date:"d/m/Y H:i" }}</td>
+                <td>
+                    <span class="abadge abadge-{{ log.action|lower }}">{{ log.get_action_display }}</span>
+                </td>
+                <td>{{ log.user.get_full_name|default:log.user.username|default:"—" }}</td>
+                <td>
+                    {% if log.target_user and log.target_user != log.user %}
+                        {{ log.target_user.get_full_name|default:log.target_user.username }}
+                    {% else %}—{% endif %}
+                </td>
+                <td><code>{{ log.ip_address|default:"—" }}</code></td>
+                <td style="color:#606060;">{{ log.details|default:"—"|truncatechars:80 }}</td>
+            </tr>
+        {% empty %}
+            <tr class="empty-row"><td colspan="6">Sin registros para estos filtros.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    <!-- Paginación -->
+    {% if page_obj.has_other_pages %}
+    {% with q=filters.user a=filters.action df=filters.date_from dt=filters.date_to %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?tipo={{ log_type }}{% if a %}&action={{ a }}{% endif %}{% if q %}&user={{ q }}{% endif %}{% if df %}&date_from={{ df }}{% endif %}{% if dt %}&date_to={{ dt }}{% endif %}&page={{ page_obj.previous_page_number }}" class="page-link">← Anterior</a>
+        {% else %}
+            <span class="page-link disabled">← Anterior</span>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="page-link active">{{ num }}</span>
+            {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                <a href="?tipo={{ log_type }}{% if a %}&action={{ a }}{% endif %}{% if q %}&user={{ q }}{% endif %}{% if df %}&date_from={{ df }}{% endif %}{% if dt %}&date_to={{ dt }}{% endif %}&page={{ num }}" class="page-link">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="?tipo={{ log_type }}{% if a %}&action={{ a }}{% endif %}{% if q %}&user={{ q }}{% endif %}{% if df %}&date_from={{ df }}{% endif %}{% if dt %}&date_to={{ dt }}{% endif %}&page={{ page_obj.next_page_number }}" class="page-link">Siguiente →</a>
+        {% else %}
+            <span class="page-link disabled">Siguiente →</span>
+        {% endif %}
+    </div>
+    <p style="text-align:center;font-size:13px;color:#9A979F;margin-top:10px;">
+        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }} — {{ page_obj.paginator.count }} registro(s)
+    </p>
+    {% endwith %}
+    {% endif %}
+
+    <div style="margin-top:24px;">
+        <a href="{% url 'ticket_list' %}" style="font-size:13px;font-weight:600;color:#9A979F;text-decoration:none;">← Volver al panel IT</a>
+    </div>
+
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,204 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+.page-wrapper{display:flex;justify-content:center;margin:40px 0 60px;}
+.page-card{width:1200px;background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.10);padding:35px 40px;}
+
+.page-header{margin-bottom:28px;}
+.page-title{font-size:30px;font-weight:700;color:#1B3E92;margin:0 0 6px;}
+.page-subtitle{font-size:15px;color:#606060;margin:0;}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;}
+.kpi-grid2{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px;}
+.kpi-card{background:#F7F8FB;border-radius:12px;padding:18px 16px;text-align:center;}
+.kpi-label{font-size:12px;font-weight:600;color:#606060;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px;}
+.kpi-value{font-size:26px;font-weight:700;color:#1B3E92;}
+.kpi-card.success .kpi-value{color:#198754;}
+.kpi-card.danger  .kpi-value{color:#dc3545;}
+.kpi-card.warning .kpi-value{color:#fd7e14;}
+
+/* Gráficos */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;}
+.chart-card{background:#F7F8FB;border-radius:12px;padding:24px;}
+.chart-title{font-size:15px;font-weight:700;color:#1B3E92;margin-bottom:16px;}
+.chart-container{position:relative;height:220px;}
+
+/* Tickets activos */
+.section-title{font-size:17px;font-weight:700;color:#1B3E92;margin:0 0 16px;padding-bottom:10px;border-bottom:2px solid #eef0f4;}
+.active-list{display:flex;flex-direction:column;gap:10px;}
+.active-item{display:flex;justify-content:space-between;align-items:center;background:#F7F8FB;border-radius:10px;padding:14px 18px;gap:12px;flex-wrap:wrap;}
+.active-title{font-size:14px;font-weight:600;color:#1B3E92;}
+.active-meta{font-size:12px;color:#606060;margin-top:3px;}
+.badges{display:flex;gap:8px;flex-wrap:wrap;}
+.badge{display:inline-block;padding:5px 11px;border-radius:999px;font-size:11px;font-weight:700;color:#fff;}
+.btn-sm{background:#289DFF;color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:12px;font-weight:600;text-decoration:none;display:inline-block;}
+.btn-sm:hover{background:#1B3E92;}
+
+.no-data{text-align:center;padding:40px;color:#9A979F;font-size:14px;}
+
+@media(max-width:1100px){.page-card{width:96%;padding:24px 16px;}.kpi-grid,.kpi-grid2{grid-template-columns:repeat(2,1fr);}.charts-row{grid-template-columns:1fr;}}
+</style>
+
+<div class="page-wrapper">
+<div class="page-card">
+
+    <div class="page-header">
+        <h2 class="page-title">Mi Dashboard — {{ request.user.get_full_name|default:request.user.username }}</h2>
+        <p class="page-subtitle">Rendimiento personal · {{ month_label }}</p>
+    </div>
+
+    <!-- KPIs fila 1 -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Total asignados</div>
+            <div class="kpi-value">{{ stats.total }}</div>
+        </div>
+        <div class="kpi-card {% if stats.pendientes > 0 %}warning{% endif %}">
+            <div class="kpi-label">Pendientes</div>
+            <div class="kpi-value">{{ stats.pendientes }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">En proceso</div>
+            <div class="kpi-value">{{ stats.en_proceso }}</div>
+        </div>
+        <div class="kpi-card success">
+            <div class="kpi-label">Cerrados</div>
+            <div class="kpi-value">{{ stats.cerrados }}</div>
+        </div>
+    </div>
+    <!-- KPIs fila 2 -->
+    <div class="kpi-grid2">
+        <div class="kpi-card success">
+            <div class="kpi-label">SLA cumplidos</div>
+            <div class="kpi-value">{{ stats.sla_cumplidos }}</div>
+        </div>
+        <div class="kpi-card {% if stats.sla_vencidos > 0 %}danger{% endif %}">
+            <div class="kpi-label">SLA vencidos</div>
+            <div class="kpi-value">{{ stats.sla_vencidos }}</div>
+        </div>
+        <div class="kpi-card {% if criticos_activos > 0 %}danger{% endif %}">
+            <div class="kpi-label">Críticos activos</div>
+            <div class="kpi-value">{{ criticos_activos }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Tiempo prom.</div>
+            <div class="kpi-value" style="font-size:20px;">{{ avg_fmt }}</div>
+        </div>
+    </div>
+
+    <!-- Segunda fila KPI: horas trabajadas -->
+    <div style="background:#1B3E92;border-radius:12px;padding:20px 28px;margin-bottom:32px;display:flex;align-items:center;gap:32px;flex-wrap:wrap;">
+        <div>
+            <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;">Tiempo total trabajado este mes</div>
+            <div style="font-size:32px;font-weight:700;color:#fff;">{{ total_work_fmt }}</div>
+        </div>
+        <div style="height:50px;width:1px;background:rgba(255,255,255,.2);"></div>
+        <div>
+            <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;">Tiempo promedio por ticket</div>
+            <div style="font-size:32px;font-weight:700;color:#289DFF;">{{ avg_fmt }}</div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-row">
+        <div class="chart-card">
+            <div class="chart-title">Tickets por categoría</div>
+            <div class="chart-container">
+                <canvas id="chartCategory"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">Tickets por prioridad</div>
+            <div class="chart-container">
+                <canvas id="chartPriority"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLA en riesgo -->
+    {% if sla_riesgo %}
+    <div class="section-title" style="color:#dc3545;">Próximos a vencer SLA
+        <span style="font-size:12px;font-weight:400;color:#9A979F;">(activos con SLA &lt; 4h)</span>
+    </div>
+    <div class="active-list" style="margin-bottom:32px;">
+        {% for ticket in sla_riesgo %}
+        <div class="active-item" style="border-left:4px solid {% if ticket.is_overdue %}#dc3545{% else %}#fd7e14{% endif %};">
+            <div>
+                <div class="active-title">{{ ticket.ticket_number|default:ticket.id }} — {{ ticket.title }}</div>
+                <div class="active-meta">
+                    SLA: {{ ticket.sla_deadline|date:"d/m/Y H:i" }}
+                    {% if ticket.is_overdue %}<span style="color:#dc3545;font-weight:700;"> — VENCIDO</span>{% endif %}
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span class="badge {{ ticket.priority_css_class }}">{{ ticket.get_priority_display }}</span>
+                <a href="{% url 'respond_ticket' ticket.id %}" class="btn-sm" style="background:#dc3545;">Atender</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Tickets activos -->
+    <div class="section-title">Tickets activos asignados a mí</div>
+    {% if active_tickets %}
+        <div class="active-list">
+        {% for ticket in active_tickets %}
+            <div class="active-item">
+                <div>
+                    <div class="active-title">{{ ticket.ticket_number|default:ticket.id }} — {{ ticket.title }}</div>
+                    <div class="active-meta">{{ ticket.get_category_display }} · Creado {{ ticket.created_at|date:"d/m/Y" }}{% if ticket.is_overdue %} · <span style="color:#dc3545;font-weight:700;">SLA vencido</span>{% endif %}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div class="badges">
+                        <span class="badge {{ ticket.priority_css_class }}">{{ ticket.get_priority_display }}</span>
+                    </div>
+                    <a href="{% url 'respond_ticket' ticket.id %}" class="btn-sm">Gestionar</a>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-data">No tienes tickets activos asignados.</div>
+    {% endif %}
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const COLORS = ["#289DFF","#1B3E92","#198754","#fd7e14","#dc3545","#9A979F","#6f42c1","#20c997","#0dcaf0","#ffc107"];
+
+(function(){
+    const catData = {{ chart_category|safe }};
+    const priData = {{ chart_priority|safe }};
+
+    function makeChart(id, data, type){
+        const ctx = document.getElementById(id);
+        if(!ctx || !data.labels.length) return;
+        new Chart(ctx, {
+            type: type,
+            data: {
+                labels: data.labels,
+                datasets:[{
+                    data: data.data,
+                    backgroundColor: COLORS.slice(0, data.data.length),
+                    borderWidth: 0,
+                    borderRadius: type === 'bar' ? 6 : 0,
+                }]
+            },
+            options:{
+                responsive:true,
+                maintainAspectRatio:false,
+                plugins:{legend:{position: type === 'doughnut' ? 'right' : 'top', labels:{font:{family:'Montserrat',size:12}}}},
+                scales: type === 'bar' ? {y:{beginAtZero:true,ticks:{stepSize:1}},x:{grid:{display:false}}} : undefined,
+            }
+        });
+    }
+
+    makeChart('chartCategory', catData, 'bar');
+    makeChart('chartPriority', priData, 'doughnut');
+})();
+</script>
+{% endblock %}

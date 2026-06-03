@@ -1,0 +1,50 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+  .confirm-wrapper{max-width:560px;margin:60px auto;}
+  .card{background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:36px 40px;text-align:center;}
+  .danger-icon{font-size:56px;margin-bottom:16px;}
+  .card-title{font-size:22px;font-weight:700;color:#1B3E92;margin:0 0 12px;}
+  .card-body{font-size:15px;color:#374151;line-height:1.6;margin-bottom:8px;}
+  .warning-box{background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px 18px;font-size:13px;color:#856404;margin:20px 0;text-align:left;}
+  .warning-box strong{display:block;margin-bottom:4px;}
+  .role-badge{display:inline-block;background:#1B3E92;color:#fff;padding:6px 16px;border-radius:20px;font-weight:700;font-size:15px;margin:8px 0 20px;}
+  .btn-row{display:flex;gap:12px;justify-content:center;margin-top:24px;}
+  .btn-danger{background:#dc3545;color:#fff;padding:11px 28px;border-radius:8px;border:none;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .2s;}
+  .btn-danger:hover{background:#b02a37;}
+  .btn-cancel{background:#f3f4f6;color:#374151;padding:11px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;}
+  .btn-cancel:hover{background:#e5e7eb;}
+</style>
+
+<div class="confirm-wrapper">
+  <div class="card">
+    <div class="danger-icon">⚠️</div>
+    <h1 class="card-title">Eliminar rol</h1>
+    <p class="card-body">¿Estás seguro de que quieres eliminar el rol:</p>
+    <div class="role-badge">{{ role.name }} ({{ role.code }})</div>
+
+    <div class="warning-box">
+      <strong>Consecuencias de esta acción:</strong>
+      <ul style="margin:6px 0 0;padding-left:18px;">
+        <li>Los <strong>{{ role.user_count }} usuario(s)</strong> con este rol quedarán sin rol asignado.</li>
+        <li>Los permisos vinculados a este rol serán desvinculados.</li>
+        <li>Esta acción <strong>no se puede deshacer</strong>.</li>
+      </ul>
+    </div>
+
+    {% if role.user_count > 0 %}
+    <p style="font-size:13px;color:#dc3545;font-weight:600;">
+      Recomendamos reasignar los usuarios a otro rol antes de eliminar este.
+    </p>
+    {% endif %}
+
+    <div class="btn-row">
+      <a href="{% url 'role_list' %}" class="btn-cancel">Cancelar</a>
+      <form method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn-danger">Sí, eliminar rol</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

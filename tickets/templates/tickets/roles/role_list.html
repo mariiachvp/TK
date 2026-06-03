@@ -1,0 +1,135 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+  .page-header{display:flex;justify-content:space-between;align-items:center;padding:32px 0 20px;}
+  .page-title{font-size:26px;font-weight:700;color:#1B3E92;margin:0;}
+  .btn-primary{display:inline-block;background:#1B3E92;color:#fff;padding:10px 22px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transition:background .2s;}
+  .btn-primary:hover{background:#289DFF;}
+  .card{background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden;margin-bottom:24px;}
+  .card-body{padding:0;}
+  table{width:100%;border-collapse:collapse;}
+  th{background:#f8f9fa;padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #e9ecef;}
+  td{padding:14px 16px;border-bottom:1px solid #f0f0f0;font-size:14px;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:#fafbfc;}
+  .badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+  .badge-active{background:#d1fae5;color:#065f46;}
+  .badge-inactive{background:#fee2e2;color:#991b1b;}
+  .badge-it{background:#dbeafe;color:#1e40af;}
+  .badge-area{background:#f3f4f6;color:#374151;}
+  .perm-count{display:inline-block;background:#e0e7ff;color:#3730a3;border-radius:12px;padding:2px 10px;font-size:12px;font-weight:700;}
+  .user-count{display:inline-block;background:#fef3c7;color:#92400e;border-radius:12px;padding:2px 10px;font-size:12px;font-weight:700;}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .btn-sm{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;}
+  .btn-edit{background:#e0e7ff;color:#3730a3;}
+  .btn-edit:hover{background:#c7d2fe;}
+  .btn-del{background:#fee2e2;color:#991b1b;}
+  .btn-del:hover{background:#fecaca;}
+  .btn-toggle-on{background:#d1fae5;color:#065f46;}
+  .btn-toggle-on:hover{background:#a7f3d0;}
+  .btn-toggle-off{background:#fef3c7;color:#92400e;}
+  .btn-toggle-off:hover{background:#fde68a;}
+  .empty-state{text-align:center;padding:60px 20px;color:#9A979F;}
+  .empty-state p{font-size:15px;margin:8px 0 20px;}
+  .stats-bar{display:flex;gap:16px;padding:20px 0;flex-wrap:wrap;}
+  .stat-item{background:#fff;border-radius:10px;padding:14px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06);min-width:120px;}
+  .stat-num{font-size:24px;font-weight:800;color:#1B3E92;}
+  .stat-label{font-size:11px;color:#9A979F;font-weight:600;text-transform:uppercase;}
+</style>
+
+<div class="page-header">
+  <h1 class="page-title">Gestión de roles</h1>
+  <a href="{% url 'role_create' %}" class="btn-primary">+ Crear rol</a>
+</div>
+
+<!-- Estadísticas rápidas -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-num">{{ roles|length }}</div>
+    <div class="stat-label">Roles totales</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">{% with active=roles|length %}{{ active }}{% endwith %}</div>
+    <div class="stat-label">Activos</div>
+  </div>
+</div>
+
+<div class="card">
+  {% if roles %}
+  <div class="card-body">
+    <table>
+      <thead>
+        <tr>
+          <th>Rol</th>
+          <th>Código</th>
+          <th>Estado</th>
+          <th>Tipo</th>
+          <th>Área tickets</th>
+          <th>Permisos</th>
+          <th>Usuarios</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for role in roles %}
+        <tr>
+          <td>
+            <strong>{{ role.name }}</strong>
+            {% if role.description %}
+            <div style="font-size:12px;color:#9A979F;margin-top:2px;">{{ role.description|truncatechars:60 }}</div>
+            {% endif %}
+          </td>
+          <td><code style="background:#f3f4f6;padding:2px 8px;border-radius:4px;font-size:12px;">{{ role.code }}</code></td>
+          <td>
+            {% if role.is_active %}
+              <span class="badge badge-active">Activo</span>
+            {% else %}
+              <span class="badge badge-inactive">Inactivo</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if role.is_it_staff %}
+              <span class="badge badge-it">Personal IT</span>
+            {% else %}
+              <span class="badge badge-area">Operativo</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if role.ticket_area %}
+              <span class="badge badge-area">{{ role.ticket_area }}</span>
+            {% else %}
+              <span style="color:#9A979F;font-size:12px;">—</span>
+            {% endif %}
+          </td>
+          <td><span class="perm-count">{{ role.permission_count }}</span></td>
+          <td><span class="user-count">{{ role.user_count }}</span></td>
+          <td>
+            <div class="actions">
+              <a href="{% url 'role_edit' role.pk %}" class="btn-sm btn-edit">Editar</a>
+
+              <form method="post" action="{% url 'role_toggle' role.pk %}" style="display:inline;">
+                {% csrf_token %}
+                {% if role.is_active %}
+                  <button type="submit" class="btn-sm btn-toggle-off">Desactivar</button>
+                {% else %}
+                  <button type="submit" class="btn-sm btn-toggle-on">Activar</button>
+                {% endif %}
+              </form>
+
+              <a href="{% url 'role_delete' role.pk %}" class="btn-sm btn-del">Eliminar</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div style="font-size:48px;">🔐</div>
+    <p>No hay roles configurados aún.</p>
+    <a href="{% url 'role_create' %}" class="btn-primary">Crear primer rol</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

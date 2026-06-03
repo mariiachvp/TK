@@ -1,0 +1,118 @@
+{% extends "tickets/base.html" %}
+
+{% block content %}
+
+<style>
+.success-wrapper{
+    display:flex;
+    justify-content:center;
+    margin-top:60px;
+}
+
+.success-card{
+    width:700px;
+    background:#FFFFFF;
+    border-radius:14px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.10);
+    padding:40px;
+    text-align:center;
+}
+
+.success-icon{
+    width:90px;
+    height:90px;
+    margin:0 auto 20px auto;
+    border-radius:50%;
+    background:#289DFF;
+    color:#FFFFFF;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:42px;
+    font-weight:700;
+}
+
+.success-title{
+    font-size:34px;
+    font-weight:700;
+    color:#1B3E92;
+    margin-bottom:15px;
+}
+
+.success-message{
+    font-size:20px;
+    color:#606060;
+    line-height:1.6;
+    margin-bottom:28px;
+}
+
+.ticket-number{
+    display:inline-block;
+    background:#1B3E92;
+    color:#FFFFFF;
+    padding:12px 22px;
+    border-radius:999px;
+    font-size:20px;
+    font-weight:700;
+    margin-bottom:30px;
+}
+
+.success-actions{
+    display:flex;
+    justify-content:center;
+    gap:16px;
+    flex-wrap:wrap;
+}
+
+.btn-primary,
+.btn-secondary{
+    border:none;
+    border-radius:10px;
+    padding:14px 24px;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-block;
+}
+
+.btn-primary{
+    background:#289DFF;
+    color:#FFFFFF;
+}
+
+.btn-primary:hover{
+    background:#1B3E92;
+}
+
+.btn-secondary{
+    background:#9A979F;
+    color:#FFFFFF;
+}
+
+.btn-secondary:hover{
+    background:#606060;
+}
+</style>
+
+<div class="success-wrapper">
+    <div class="success-card">
+        <div class="success-icon">✓</div>
+
+        <div class="success-title">Ticket enviado</div>
+
+        <div class="success-message">
+            Gracias, <strong>{{ request.user.first_name|default:request.user.username }}</strong>.<br>
+            Tu ticket ha sido enviado correctamente bajo el número:
+        </div>
+
+        <div class="ticket-number">#{{ ticket.id }}</div>
+
+        <div class="success-actions">
+            <a href="{% url 'create_ticket' %}" class="btn-secondary">Crear otro ticket</a>
+            <a href="{% url 'my_tickets' %}" class="btn-primary">Ver mis tickets</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

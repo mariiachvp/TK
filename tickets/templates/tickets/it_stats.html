@@ -1,0 +1,268 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+.page-wrapper{display:flex;justify-content:center;margin:40px 0 60px;}
+.page-card{width:1280px;background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.10);padding:35px 40px;}
+
+.page-title{font-size:30px;font-weight:700;color:#1B3E92;margin:0 0 6px;}
+.page-subtitle{font-size:14px;color:#606060;margin:0 0 20px;}
+
+/* Date filter */
+.date-filter{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;background:#F7F8FB;border-radius:12px;padding:16px 20px;margin-bottom:28px;}
+.date-filter label{font-size:11px;font-weight:700;color:#606060;text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:4px;}
+.date-filter input[type=date]{border:1px solid #d0d0d0;border-radius:8px;padding:8px 12px;font-family:'Montserrat',sans-serif;font-size:13px;color:#000;background:#fff;}
+.date-filter input[type=date]:focus{border-color:#289DFF;outline:none;}
+.btn-apply{background:#289DFF;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;}
+.btn-apply:hover{background:#1B3E92;}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-bottom:28px;}
+.kpi-card{background:#F7F8FB;border-radius:12px;padding:16px 14px;text-align:center;}
+.kpi-label{font-size:10px;font-weight:700;color:#606060;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px;}
+.kpi-value{font-size:24px;font-weight:700;color:#1B3E92;}
+.kpi-card.success .kpi-value{color:#198754;}
+.kpi-card.danger  .kpi-value{color:#dc3545;}
+.kpi-card.warn    .kpi-value{color:#fd7e14;}
+
+/* SLA rate banner */
+.sla-banner{border-radius:12px;padding:20px 28px;margin-bottom:28px;background:#1B3E92;display:flex;align-items:center;gap:40px;flex-wrap:wrap;}
+.sla-banner-label{font-size:12px;color:rgba(255,255,255,.7);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}
+.sla-banner-value{font-size:38px;font-weight:700;color:#fff;}
+.sla-banner-sub{font-size:12px;color:rgba(255,255,255,.55);}
+.sla-sep{height:48px;width:1px;background:rgba(255,255,255,.2);}
+
+/* Charts */
+.charts-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:28px;}
+.chart-card{background:#F7F8FB;border-radius:12px;padding:20px;}
+.chart-title{font-size:14px;font-weight:700;color:#1B3E92;margin-bottom:14px;}
+.chart-container{position:relative;height:200px;}
+
+/* SLA by priority */
+.section-title{font-size:17px;font-weight:700;color:#1B3E92;margin:0 0 16px;padding-bottom:10px;border-bottom:2px solid #eef0f4;}
+.sla-pri-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:28px;}
+.sla-pri-table th{background:#F7F8FB;padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#606060;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid #eef0f4;}
+.sla-pri-table td{padding:12px 14px;border-bottom:1px solid #f3f4f6;vertical-align:middle;}
+.sla-pri-table tr:last-child td{border-bottom:none;}
+.sla-bar-bg{background:#e5e7eb;border-radius:999px;height:8px;width:120px;display:inline-block;vertical-align:middle;margin-right:8px;}
+.sla-bar-fill{background:#198754;border-radius:999px;height:8px;}
+.rate-pct{font-weight:700;color:#198754;}
+.rate-na{color:#9A979F;font-style:italic;}
+
+/* Tech table */
+.tech-table{width:100%;border-collapse:collapse;font-size:13px;}
+.tech-table th{text-align:left;padding:10px 14px;font-size:11px;font-weight:700;color:#606060;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid #eef0f4;background:#F7F8FB;}
+.tech-table td{padding:13px 14px;border-bottom:1px solid #f3f4f6;vertical-align:middle;}
+.tech-table tr:hover td{background:#fafafa;}
+.rank{font-size:16px;font-weight:700;color:#1B3E92;}
+.tech-name{font-weight:600;color:#000;}
+.pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;color:#fff;}
+.pill-success{background:#198754;}
+.pill-danger{background:#dc3545;}
+.empty-row{text-align:center;padding:40px;color:#9A979F;font-size:14px;}
+
+@media(max-width:1200px){.page-card{width:96%;padding:24px 16px;}.kpi-grid{grid-template-columns:repeat(4,1fr);}.charts-row{grid-template-columns:1fr 1fr;}}
+@media(max-width:700px){.kpi-grid{grid-template-columns:repeat(2,1fr);}.charts-row{grid-template-columns:1fr;}}
+</style>
+
+<div class="page-wrapper">
+<div class="page-card">
+
+    <h2 class="page-title">Estadísticas del equipo IT</h2>
+    <p class="page-subtitle">Rendimiento global · {{ period_label }}</p>
+
+    <!-- Filtro de período -->
+    <form method="get" class="date-filter">
+        <div>
+            <label>Desde</label>
+            <input type="date" name="date_from" value="{{ date_from }}">
+        </div>
+        <div>
+            <label>Hasta</label>
+            <input type="date" name="date_to" value="{{ date_to }}">
+        </div>
+        <button type="submit" class="btn-apply">Aplicar</button>
+        <a href="{% url 'it_stats' %}" style="font-size:13px;font-weight:600;color:#9A979F;text-decoration:none;padding-bottom:2px;">Mes actual</a>
+    </form>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Total</div>
+            <div class="kpi-value">{{ overall.total }}</div>
+        </div>
+        <div class="kpi-card {% if overall.pendientes > 0 %}warn{% endif %}">
+            <div class="kpi-label">Pendientes</div>
+            <div class="kpi-value">{{ overall.pendientes }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">En proceso</div>
+            <div class="kpi-value">{{ overall.en_proceso }}</div>
+        </div>
+        <div class="kpi-card success">
+            <div class="kpi-label">Resueltos</div>
+            <div class="kpi-value">{{ overall.resueltos }}</div>
+        </div>
+        <div class="kpi-card success">
+            <div class="kpi-label">Cerrados</div>
+            <div class="kpi-value">{{ overall.cerrados }}</div>
+        </div>
+        <div class="kpi-card {% if overall.sla_vencidos > 0 %}danger{% endif %}">
+            <div class="kpi-label">SLA vencidos</div>
+            <div class="kpi-value">{{ overall.sla_vencidos }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Tiempo prom.</div>
+            <div class="kpi-value" style="font-size:18px;">{{ overall.avg_fmt }}</div>
+        </div>
+    </div>
+
+    <!-- SLA banner -->
+    {% if overall.cerrados > 0 %}
+    <div class="sla-banner">
+        <div>
+            <div class="sla-banner-label">Tasa de cumplimiento SLA</div>
+            <div class="sla-banner-value">{% widthratio overall.sla_cumplidos overall.cerrados 100 %}%</div>
+            <div class="sla-banner-sub">{{ overall.sla_cumplidos }} de {{ overall.cerrados }} tickets cerrados</div>
+        </div>
+        <div class="sla-sep"></div>
+        <div>
+            <div class="sla-banner-label">Tiempo promedio de resolución</div>
+            <div class="sla-banner-value">{{ overall.avg_fmt }}</div>
+            <div class="sla-banner-sub">tickets cerrados en el período</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Gráficos -->
+    <div class="charts-row">
+        <div class="chart-card">
+            <div class="chart-title">Por categoría</div>
+            <div class="chart-container"><canvas id="chartCategory"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">Por prioridad</div>
+            <div class="chart-container"><canvas id="chartPriority"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">Por área</div>
+            <div class="chart-container"><canvas id="chartArea"></canvas></div>
+        </div>
+    </div>
+
+    <!-- SLA por prioridad -->
+    <div class="section-title">Cumplimiento SLA por prioridad</div>
+    <table class="sla-pri-table">
+        <thead>
+            <tr>
+                <th>Prioridad</th>
+                <th>Cumplidos</th>
+                <th>Vencidos</th>
+                <th>Total cerrados</th>
+                <th>Tasa</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in sla_by_priority %}
+            <tr>
+                <td><strong>{{ row.label }}</strong></td>
+                <td style="color:#198754;font-weight:600;">{{ row.cumplidos }}</td>
+                <td style="color:#dc3545;font-weight:600;">{{ row.vencidos }}</td>
+                <td>{{ row.total }}</td>
+                <td>
+                    {% if row.rate is not None %}
+                        <span class="sla-bar-bg"><span class="sla-bar-fill" style="width:{{ row.rate }}%;"></span></span>
+                        <span class="rate-pct">{{ row.rate }}%</span>
+                    {% else %}
+                        <span class="rate-na">Sin datos</span>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Rendimiento por técnico -->
+    <div class="section-title">Rendimiento por técnico</div>
+    {% if tech_list %}
+    <table class="tech-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Técnico</th>
+                <th>Total</th>
+                <th>Cerrados</th>
+                <th>SLA cumplidos</th>
+                <th>SLA vencidos</th>
+                <th>Tiempo prom.</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for tech in tech_list %}
+            <tr>
+                <td><span class="rank">{{ forloop.counter }}</span></td>
+                <td><span class="tech-name">{{ tech.display_name }}</span></td>
+                <td>{{ tech.total }}</td>
+                <td><strong>{{ tech.cerrados }}</strong></td>
+                <td>
+                    {% if tech.sla_cumplidos %}
+                        <span class="pill pill-success">{{ tech.sla_cumplidos }}</span>
+                    {% else %}—{% endif %}
+                </td>
+                <td>
+                    {% if tech.sla_vencidos %}
+                        <span class="pill pill-danger">{{ tech.sla_vencidos }}</span>
+                    {% else %}<span style="color:#198754;">0</span>{% endif %}
+                </td>
+                <td>{{ tech.avg_fmt }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="empty-row">Sin tickets asignados a técnicos en el período seleccionado.</p>
+    {% endif %}
+
+    <div style="margin-top:28px;display:flex;gap:12px;flex-wrap:wrap;">
+        <a href="{% url 'ticket_list' %}" style="font-size:13px;font-weight:600;color:#9A979F;text-decoration:none;">← Panel IT</a>
+        <a href="{% url 'export_tickets_csv' %}" style="font-size:13px;font-weight:600;color:#289DFF;text-decoration:none;">⬇ Exportar CSV</a>
+    </div>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const COLORS = ["#289DFF","#1B3E92","#198754","#fd7e14","#dc3545","#9A979F","#6f42c1","#20c997","#0dcaf0","#ffc107"];
+
+(function(){
+    const catData  = {{ chart_category|safe }};
+    const priData  = {{ chart_priority|safe }};
+    const areaData = {{ chart_area|safe }};
+
+    function makeChart(id, data, type, indexAxis){
+        const ctx = document.getElementById(id);
+        if(!ctx || !data.labels.length) return;
+        const opts = {
+            responsive:true, maintainAspectRatio:false,
+            plugins:{legend:{position: type==='doughnut'?'right':'top', labels:{font:{family:'Montserrat',size:11}}}},
+        };
+        if(type === 'bar'){
+            opts.scales = {y:{beginAtZero:true,ticks:{stepSize:1}},x:{grid:{display:false}}};
+        }
+        if(indexAxis) opts.indexAxis = indexAxis;
+        new Chart(ctx, {
+            type,
+            data:{
+                labels:data.labels,
+                datasets:[{data:data.data,backgroundColor:COLORS.slice(0,data.data.length),borderWidth:0,borderRadius:type==='bar'?5:0}]
+            },
+            options:opts,
+        });
+    }
+
+    makeChart('chartCategory', catData,  'bar');
+    makeChart('chartPriority', priData,  'doughnut');
+    makeChart('chartArea',     areaData, 'bar', 'y');
+})();
+</script>
+{% endblock %}

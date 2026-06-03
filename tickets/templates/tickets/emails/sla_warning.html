@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#eef0f4;font-family:Arial,Helvetica,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#dc3545;">
+    <tr>
+      <td style="padding:20px 30px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="color:#ffffff;font-size:20px;font-weight:bold;">LAS Cargo IT Service Desk</span>
+        <span style="color:rgba(255,255,255,0.85);font-size:14px;font-weight:bold;">⚠ ALERTA SLA</span>
+      </td>
+    </tr>
+  </table>
+
+  <table width="620" align="center" cellpadding="0" cellspacing="0" border="0"
+         style="background:#ffffff;margin:24px auto;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.10);">
+    <tr>
+      <td style="padding:32px 36px;">
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+               style="background:#F8D7DA;border-left:5px solid #dc3545;border-radius:6px;margin-bottom:24px;">
+          <tr>
+            <td style="padding:16px 18px;">
+              <div style="font-size:16px;font-weight:bold;color:#842029;margin-bottom:4px;">SLA próximo a vencer</div>
+              <div style="font-size:13px;color:#842029;">Este ticket requiere atención inmediata antes de que venza el acuerdo de nivel de servicio.</div>
+            </td>
+          </tr>
+        </table>
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+               style="border:1px solid #e5e5e5;border-radius:8px;overflow:hidden;margin-bottom:24px;">
+          <tr style="background:#F7F8FB;">
+            <td style="padding:10px 16px;font-size:12px;font-weight:bold;color:#606060;text-transform:uppercase;letter-spacing:.5px;">Ticket</td>
+            <td style="padding:10px 16px;font-size:14px;color:#dc3545;font-weight:bold;">{{ ticket.ticket_number|default:ticket.id }}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 16px;font-size:12px;font-weight:bold;color:#606060;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #e5e5e5;">Título</td>
+            <td style="padding:10px 16px;font-size:14px;color:#000;border-top:1px solid #e5e5e5;">{{ ticket.title }}</td>
+          </tr>
+          <tr style="background:#F7F8FB;">
+            <td style="padding:10px 16px;font-size:12px;font-weight:bold;color:#606060;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #e5e5e5;">Prioridad</td>
+            <td style="padding:10px 16px;font-size:14px;font-weight:bold;color:#dc3545;border-top:1px solid #e5e5e5;">{{ ticket.get_priority_display }}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 16px;font-size:12px;font-weight:bold;color:#606060;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #e5e5e5;">Categoría</td>
+            <td style="padding:10px 16px;font-size:14px;color:#000;border-top:1px solid #e5e5e5;">{{ ticket.get_category_display }}</td>
+          </tr>
+          <tr style="background:#F8D7DA;">
+            <td style="padding:10px 16px;font-size:12px;font-weight:bold;color:#842029;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #f5c2c7;">SLA Deadline</td>
+            <td style="padding:10px 16px;font-size:15px;font-weight:bold;color:#dc3545;border-top:1px solid #f5c2c7;">
+              {{ ticket.sla_deadline|date:"d/m/Y H:i" }}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:10px 16px;font-size:12px;font-weight:bold;color:#606060;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #e5e5e5;">Estado actual</td>
+            <td style="padding:10px 16px;font-size:14px;color:#000;border-top:1px solid #e5e5e5;">{{ ticket.get_status_display }}</td>
+          </tr>
+          <tr style="background:#F7F8FB;">
+            <td style="padding:10px 16px;font-size:12px;font-weight:bold;color:#606060;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #e5e5e5;">Solicitante</td>
+            <td style="padding:10px 16px;font-size:14px;color:#000;border-top:1px solid #e5e5e5;">{{ ticket.requester.get_full_name|default:ticket.requester.username }}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 16px;font-size:12px;font-weight:bold;color:#606060;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #e5e5e5;">Técnico asignado</td>
+            <td style="padding:10px 16px;font-size:14px;color:#000;border-top:1px solid #e5e5e5;">
+              {% if ticket.assigned_to %}{{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}{% else %}<span style="color:#dc3545;font-weight:bold;">Sin asignar</span>{% endif %}
+            </td>
+          </tr>
+        </table>
+
+        {% if app_url %}
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td align="center">
+              <a href="{{ app_url }}{% url 'respond_ticket' ticket.id %}"
+                 style="display:inline-block;background:#dc3545;color:#ffffff;text-decoration:none;
+                        padding:13px 28px;border-radius:8px;font-size:15px;font-weight:bold;">
+                Atender ahora
+              </a>
+            </td>
+          </tr>
+        </table>
+        {% endif %}
+
+      </td>
+    </tr>
+  </table>
+
+  <table width="620" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 30px;">
+    <tr>
+      <td style="text-align:center;color:#9A979F;font-size:12px;padding:16px;">
+        LAS Cargo · Mesa de Ayuda IT · Alerta automática de SLA
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

@@ -1,0 +1,391 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+.page-wrapper{display:flex;justify-content:center;margin:40px 0 60px;}
+.page-card{width:1080px;background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.10);padding:35px 40px;}
+
+.page-title{font-size:28px;font-weight:700;color:#1B3E92;margin:0 0 4px;}
+.ticket-num{font-size:13px;font-weight:700;color:#9A979F;margin-bottom:14px;}
+
+/* Resumen del ticket */
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px;}
+.info-block{background:#F7F8FB;border-radius:12px;padding:16px;}
+.info-block.full{grid-column:1 / -1;}
+.info-label{font-size:11px;font-weight:700;color:#9A979F;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;}
+.info-value{font-size:14px;color:#000;line-height:1.5;word-break:break-word;}
+
+/* SLA panel */
+.sla-panel{border-radius:12px;padding:14px 20px;margin-bottom:28px;border-left:5px solid #9A979F;}
+.sla-panel.ok{background:#d1e7dd;border-left-color:#198754;}
+.sla-panel.vencido{background:#f8d7da;border-left-color:#dc3545;}
+.sla-panel.pending{background:#F7F8FB;}
+.sla-title{font-size:14px;font-weight:700;margin-bottom:2px;}
+.sla-value{font-size:12px;color:#606060;}
+
+/* Formulario de gestión */
+.section-title{font-size:16px;font-weight:700;color:#1B3E92;margin:32px 0 14px;padding-bottom:10px;border-bottom:2px solid #eef0f4;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-group{margin-bottom:0;}
+.form-group.full{grid-column:1 / -1;}
+.form-group label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;}
+.actions{display:flex;justify-content:space-between;gap:12px;margin-top:20px;flex-wrap:wrap;}
+.btn-primary,.btn-secondary{border:none;border-radius:8px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;text-decoration:none;display:inline-block;}
+.btn-primary{background:#289DFF;color:#fff;}
+.btn-primary:hover{background:#1B3E92;}
+.btn-secondary{background:#9A979F;color:#fff;}
+.btn-secondary:hover{background:#606060;}
+
+/* Conversación pública */
+.conv-thread{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
+.msg-bubble{border-radius:12px;padding:14px 18px;max-width:92%;}
+.msg-user{background:#F7F8FB;border:1px solid #e5e7eb;align-self:flex-start;}
+.msg-it{background:#EEF6FF;border:1px solid #bfdbfe;align-self:flex-end;}
+.msg-it-internal{background:#fffbea;border:1px solid #fde68a;align-self:flex-end;}
+.msg-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+.msg-author{font-size:12px;font-weight:700;color:#374151;}
+.msg-time{font-size:11px;color:#9A979F;}
+.msg-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;}
+.badge-it{background:#dbeafe;color:#1e40af;}
+.badge-user{background:#f3f4f6;color:#374151;}
+.badge-internal{background:#fef3c7;color:#92400e;}
+.msg-content{font-size:13px;color:#333;line-height:1.6;white-space:pre-wrap;}
+
+/* Forms de comentario */
+.comment-add-box{background:#F7F8FB;border-radius:12px;padding:16px 20px;}
+.comment-add-box textarea{width:100%;border:1px solid #d0d0d0;border-radius:8px;padding:12px;font-family:'Montserrat',sans-serif;font-size:13px;resize:vertical;min-height:70px;box-sizing:border-box;}
+.comment-add-box textarea:focus{outline:none;border-color:#289DFF;}
+.btn-send-public{background:#1B3E92;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;margin-top:8px;}
+.btn-send-public:hover{background:#289DFF;}
+.btn-send-internal{background:#fd7e14;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;margin-top:8px;}
+.btn-send-internal:hover{background:#e06900;}
+
+/* Adjuntos */
+.attach-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.attach-item{display:flex;align-items:center;justify-content:space-between;background:#F7F8FB;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;flex-wrap:wrap;gap:8px;}
+.attach-name{font-size:13px;font-weight:600;color:#1B3E92;word-break:break-all;}
+.attach-meta{font-size:11px;color:#9A979F;}
+.attach-actions{display:flex;gap:8px;flex-shrink:0;}
+.btn-dl{background:#1B3E92;color:#fff;border:none;border-radius:6px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;font-family:'Montserrat',sans-serif;}
+.btn-dl:hover{background:#289DFF;}
+.btn-del-attach{background:#dc3545;color:#fff;border:none;border-radius:6px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;}
+.btn-del-attach:hover{background:#b02a37;}
+.attach-upload-box{background:#F7F8FB;border-radius:10px;padding:14px 18px;margin-top:8px;}
+.attach-upload-box input[type=file]{font-size:13px;font-family:'Montserrat',sans-serif;}
+.btn-upload{background:#198754;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;margin-top:8px;}
+.btn-upload:hover{background:#146c43;}
+
+/* Auditoría */
+.audit-section{margin-top:32px;}
+.audit-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f3f4f6;}
+.audit-dot{width:8px;height:8px;border-radius:50%;background:#289DFF;flex-shrink:0;margin-top:6px;}
+.audit-text{font-size:13px;color:#333;line-height:1.5;}
+.audit-meta{font-size:11px;color:#9A979F;margin-top:2px;}
+
+@media(max-width:900px){.page-card{width:96%;padding:24px 16px;}.summary-grid,.form-grid{grid-template-columns:1fr;}.info-block.full,.form-group.full{grid-column:auto;}}
+</style>
+
+<div class="page-wrapper">
+<div class="page-card">
+
+    <div class="ticket-num">{{ ticket.ticket_number|default:ticket.id }}</div>
+    <h2 class="page-title">{{ ticket.title }}</h2>
+
+    <!-- Resumen -->
+    <div class="summary-grid">
+        <div class="info-block">
+            <div class="info-label">Solicitante</div>
+            <div class="info-value">{{ ticket.requester.get_full_name|default:ticket.requester.username }}</div>
+        </div>
+        <div class="info-block">
+            <div class="info-label">Área · Categoría</div>
+            <div class="info-value">{{ ticket.get_area_display }} · {{ ticket.get_category_display }}</div>
+        </div>
+        <div class="info-block">
+            <div class="info-label">Tiempo trabajado</div>
+            <div class="info-value">{{ total_work_fmt }}</div>
+        </div>
+        <div class="info-block">
+            <div class="info-label">Estado · Prioridad</div>
+            <div class="info-value">{{ ticket.get_status_display }} · {{ ticket.get_priority_display }}</div>
+        </div>
+        <div class="info-block">
+            <div class="info-label">Técnico asignado</div>
+            <div class="info-value">{{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username|default:"Sin asignar" }}</div>
+        </div>
+        <div class="info-block">
+            <div class="info-label">Creado</div>
+            <div class="info-value">{{ ticket.created_at|date:"d/m/Y H:i" }}</div>
+        </div>
+        <div class="info-block full">
+            <div class="info-label">Descripción del usuario</div>
+            <div class="info-value">{{ ticket.description|linebreaksbr }}</div>
+        </div>
+    </div>
+
+    <!-- Panel SLA -->
+    {% if ticket.sla_met is True %}
+    <div class="sla-panel ok">
+        <div class="sla-title">SLA cumplido</div>
+        <div class="sla-value">Resuelto: {{ ticket.resolved_at|date:"d/m/Y H:i" }} — Deadline: {{ ticket.sla_deadline|date:"d/m/Y H:i" }}</div>
+    </div>
+    {% elif ticket.sla_met is False %}
+    <div class="sla-panel vencido">
+        <div class="sla-title">SLA vencido</div>
+        <div class="sla-value">Deadline era {{ ticket.sla_deadline|date:"d/m/Y H:i" }}</div>
+    </div>
+    {% elif ticket.is_overdue %}
+    <div class="sla-panel vencido">
+        <div class="sla-title">SLA vencido — ticket activo</div>
+        <div class="sla-value">Deadline: {{ ticket.sla_deadline|date:"d/m/Y H:i" }}</div>
+    </div>
+    {% elif ticket.sla_deadline %}
+    <div class="sla-panel pending">
+        <div class="sla-title">SLA deadline</div>
+        <div class="sla-value">{{ ticket.sla_deadline|date:"d/m/Y H:i" }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Formulario de gestión -->
+    <div class="section-title">Gestión del ticket</div>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div class="form-group">
+                <label>{{ form.status.label }}</label>
+                {{ form.status }}
+            </div>
+            <div class="form-group">
+                <label>{{ form.priority.label }}</label>
+                {{ form.priority }}
+            </div>
+            <div class="form-group">
+                <label>{{ form.category.label }}</label>
+                {{ form.category }}
+            </div>
+            <div class="form-group">
+                <label>{{ form.assigned_to.label }}</label>
+                {{ form.assigned_to }}
+                {% if it_techs_with_load %}
+                <div style="margin-top:8px;background:#F7F8FB;border-radius:8px;padding:10px 14px;font-size:12px;">
+                    <div style="font-weight:700;color:#606060;margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px;">Carga activa del equipo</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    {% for tech, load in it_techs_with_load %}
+                        <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;
+                            {% if load == 0 %}background:#d1fae5;color:#065f46;
+                            {% elif load <= 3 %}background:#EEF6FF;color:#1B3E92;
+                            {% elif load <= 6 %}background:#fff3cd;color:#856404;
+                            {% else %}background:#fee2e2;color:#991b1b;{% endif %}">
+                            {{ tech.get_full_name|default:tech.username }}
+                            <span style="font-size:10px;opacity:.85;">{{ load }}</span>
+                        </span>
+                    {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="form-group full">
+                <label>{{ form.response.label }}</label>
+                {{ form.response }}
+            </div>
+        </div>
+        <div class="actions">
+            <a href="{% url 'ticket_list' %}" class="btn-secondary">← Volver al panel</a>
+            <button type="submit" class="btn-primary">Guardar cambios</button>
+        </div>
+    </form>
+
+    <!-- ===== CONVERSACIÓN PÚBLICA ===== -->
+    <div class="section-title">
+        Conversación pública
+        <span style="font-size:12px;font-weight:400;color:#9A979F;">— visible para el usuario y el equipo IT</span>
+    </div>
+
+    <div class="conv-thread">
+        <!-- Mensaje inicial del usuario -->
+        <div class="msg-bubble msg-user">
+            <div class="msg-header">
+                <span class="msg-author">{{ ticket.requester.get_full_name|default:ticket.requester.username }}</span>
+                <span class="msg-badge badge-user">Usuario</span>
+                <span class="msg-time">{{ ticket.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="msg-content">{{ ticket.description }}</div>
+        </div>
+
+        <!-- Respuesta formal de IT (si existe) -->
+        {% if ticket.response %}
+        <div class="msg-bubble msg-it" style="align-self:flex-end;">
+            <div class="msg-header">
+                <span class="msg-author">Equipo IT</span>
+                <span class="msg-badge badge-it">IT · Respuesta</span>
+                <span class="msg-time">{{ ticket.updated_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="msg-content">{{ ticket.response }}</div>
+        </div>
+        {% endif %}
+
+        <!-- Comentarios públicos -->
+        {% for note in public_notes %}
+        <div class="msg-bubble {% if note.author == ticket.requester %}msg-user{% else %}msg-it{% endif %}">
+            <div class="msg-header">
+                <span class="msg-author">{{ note.author.get_full_name|default:note.author.username|default:"Sistema" }}</span>
+                {% if note.author == ticket.requester %}
+                    <span class="msg-badge badge-user">Usuario</span>
+                {% else %}
+                    <span class="msg-badge badge-it">IT</span>
+                {% endif %}
+                <span class="msg-time">{{ note.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="msg-content">{{ note.content }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Agregar comentario público -->
+    <div class="comment-add-box">
+        <p style="font-size:12px;font-weight:700;color:#374151;margin:0 0 8px;">Enviar mensaje al usuario</p>
+        <form method="post">
+            {% csrf_token %}
+            <textarea name="note_content" placeholder="Escribe un mensaje visible para el usuario…" rows="3"></textarea>
+            <button type="submit" name="add_note" value="public" class="btn-send-public">Enviar al usuario</button>
+        </form>
+    </div>
+
+    <!-- ===== NOTAS INTERNAS IT ===== -->
+    <div class="section-title">
+        Notas internas
+        <span style="font-size:12px;font-weight:400;color:#9A979F;">— solo visibles para el equipo IT</span>
+    </div>
+
+    <div class="conv-thread" style="margin-bottom:16px;">
+        {% for note in internal_notes %}
+        <div class="msg-bubble msg-it-internal" style="align-self:flex-start;">
+            <div class="msg-header">
+                <span class="msg-author">{{ note.author.get_full_name|default:note.author.username|default:"Sistema" }}</span>
+                <span class="msg-badge badge-internal">Interna</span>
+                <span class="msg-time">{{ note.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="msg-content">{{ note.content }}</div>
+        </div>
+        {% empty %}
+        <p style="font-size:13px;color:#9A979F;">Sin notas internas aún.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Agregar nota interna -->
+    <div class="comment-add-box" style="background:#fffbea;border:1px solid #fde68a;">
+        <p style="font-size:12px;font-weight:700;color:#92400e;margin:0 0 8px;">Agregar nota interna (IT only)</p>
+        <form method="post">
+            {% csrf_token %}
+            <textarea name="note_content" placeholder="Nota interna — el usuario no podrá verla…" rows="2" style="border-color:#fde68a;"></textarea>
+            <button type="submit" name="add_note" value="internal" class="btn-send-internal">Agregar nota interna</button>
+        </form>
+    </div>
+
+    <!-- ===== ADJUNTOS ===== -->
+    <div class="section-title">
+        Archivos adjuntos
+        <span style="font-size:12px;font-weight:400;color:#9A979F;">— evidencias y documentos</span>
+    </div>
+
+    {% if attachments %}
+    <div class="attach-list">
+        {% for att in attachments %}
+        <div class="attach-item">
+            <div>
+                <div class="attach-name">{{ att.original_name }}</div>
+                <div class="attach-meta">{{ att.size_display }} · {{ att.created_at|date:"d/m/Y H:i" }}
+                    {% if att.uploaded_by %} · {{ att.uploaded_by.get_full_name|default:att.uploaded_by.username }}{% endif %}
+                </div>
+            </div>
+            <div class="attach-actions">
+                <a href="{% url 'download_attachment' att.pk %}" class="btn-dl">Descargar</a>
+                <form method="post" action="{% url 'delete_attachment' att.pk %}" onsubmit="return confirm('¿Eliminar este adjunto?');" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-del-attach">Eliminar</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="font-size:13px;color:#9A979F;margin-bottom:12px;">Sin archivos adjuntos.</p>
+    {% endif %}
+
+    <div class="attach-upload-box">
+        <p style="font-size:12px;font-weight:700;color:#374151;margin:0 0 8px;">Adjuntar evidencia o documento</p>
+        <form method="post" action="{% url 'upload_attachment' ticket.pk %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="file" accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx,.zip,.txt,.log">
+            <br>
+            <small style="font-size:11px;color:#9A979F;">Permitidos: jpg, jpeg, png, pdf, docx, xlsx, zip, txt, log · Máx. 10 MB</small>
+            <br>
+            <button type="submit" class="btn-upload">Subir archivo</button>
+        </form>
+    </div>
+
+    <!-- ===== HISTORIAL DE CAMBIOS ===== -->
+    {% if audit_logs %}
+    <div class="audit-section">
+        <div class="section-title">Historial de cambios</div>
+        {% for log in audit_logs %}
+        <div class="audit-item">
+            <div class="audit-dot"></div>
+            <div>
+                <div class="audit-text">
+                    {% if log.action == "CREATED" %}
+                        Ticket creado
+                    {% elif log.action == "STATUS_CHANGE" %}
+                        Estado: <strong>{{ log.old_value }}</strong> → <strong>{{ log.new_value }}</strong>
+                    {% elif log.action == "RESPONDED" %}
+                        Respuesta formal registrada
+                    {% elif log.action == "REOPENED" %}
+                        <span style="color:#fd7e14;font-weight:700;">↩ Reabierto por el usuario</span>
+                    {% elif log.action == "COMMENT_ADDED" %}
+                        {% if log.new_value|slice:":7" == "público" %}
+                            Comentario público enviado al usuario
+                        {% else %}
+                            Nota interna agregada
+                        {% endif %}
+                    {% elif log.action == "ATTACHMENT_ADDED" %}
+                        Adjunto subido: <em>{{ log.new_value }}</em>
+                    {% elif log.action == "ATTACHMENT_DELETED" %}
+                        <span style="color:#dc3545;">Adjunto eliminado:</span> <em>{{ log.old_value }}</em>
+                    {% elif log.action == "FIELD_CHANGE" %}
+                        {% if log.field == "priority" %}
+                            Prioridad: <strong>{{ log.old_value }}</strong> → <strong>{{ log.new_value }}</strong>
+                        {% elif log.field == "category" %}
+                            Categoría: <strong>{{ log.old_value }}</strong> → <strong>{{ log.new_value }}</strong>
+                        {% else %}
+                            {{ log.field|capfirst }}: <strong>{{ log.old_value }}</strong> → <strong>{{ log.new_value }}</strong>
+                        {% endif %}
+                    {% elif log.action == "ASSIGNED" %}
+                        Técnico asignado: → <strong>{{ log.new_value }}</strong>
+                    {% elif log.action == "REASSIGNED" %}
+                        Técnico reasignado: <strong>{{ log.old_value }}</strong> → <strong>{{ log.new_value }}</strong>
+                    {% elif log.action == "ESCALATED" %}
+                        <span style="color:#fd7e14;font-weight:700;">⬆ Escalado automáticamente:</span>
+                        prioridad
+                        <strong>{% if log.old_value == "LOW" %}Baja{% elif log.old_value == "MEDIUM" %}Media{% elif log.old_value == "HIGH" %}Alta{% elif log.old_value == "CRITICAL" %}Crítica{% else %}{{ log.old_value }}{% endif %}</strong>
+                        →
+                        <strong>{% if log.new_value == "LOW" %}Baja{% elif log.new_value == "MEDIUM" %}Media{% elif log.new_value == "HIGH" %}Alta{% elif log.new_value == "CRITICAL" %}Crítica{% else %}{{ log.new_value }}{% endif %}</strong>
+                    {% else %}
+                        {% if log.old_value or log.new_value %}
+                            {{ log.old_value }} → {{ log.new_value }}
+                        {% else %}
+                            {{ log.get_action_display }}
+                        {% endif %}
+                    {% endif %}
+                </div>
+                <div class="audit-meta">
+                    {{ log.timestamp|date:"d/m/Y H:i" }}
+                    {% if log.user %}— {{ log.user.get_full_name|default:log.user.username }}{% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+</div>
+{% endblock %}

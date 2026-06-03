@@ -1,0 +1,200 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+  .page-header{display:flex;justify-content:space-between;align-items:center;padding:32px 0 20px;flex-wrap:wrap;gap:16px;}
+  .page-title{font-size:26px;font-weight:700;color:#1B3E92;margin:0;}
+  .btn-primary{display:inline-block;background:#1B3E92;color:#fff;padding:10px 22px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transition:background .2s;}
+  .btn-primary:hover{background:#289DFF;}
+  /* Filtros */
+  .filter-bar{background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:20px;}
+  .filter-group{display:flex;flex-direction:column;gap:4px;}
+  .filter-label{font-size:11px;font-weight:700;color:#6c757d;text-transform:uppercase;}
+  .filter-input{padding:8px 12px;border:1px solid #d0d0d0;border-radius:8px;font-size:13px;font-family:'Montserrat',sans-serif;min-width:160px;}
+  .filter-input:focus{outline:none;border-color:#1B3E92;}
+  .btn-filter{background:#1B3E92;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;}
+  .btn-filter:hover{background:#289DFF;}
+  .btn-clear{background:#f3f4f6;color:#374151;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;text-decoration:none;display:inline-block;}
+  .btn-clear:hover{background:#e5e7eb;}
+  /* Stats */
+  .stats-row{display:flex;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+  .stat-card{background:#fff;border-radius:10px;padding:14px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06);min-width:110px;}
+  .stat-num{font-size:26px;font-weight:800;color:#1B3E92;}
+  .stat-lbl{font-size:11px;color:#9A979F;font-weight:600;text-transform:uppercase;}
+  /* Tabla */
+  .card{background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden;}
+  table{width:100%;border-collapse:collapse;}
+  th{background:#f8f9fa;padding:12px 16px;text-align:left;font-size:11px;font-weight:700;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #e9ecef;}
+  td{padding:13px 16px;border-bottom:1px solid #f0f0f0;font-size:13px;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:#fafbfc;}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+  .badge-active{background:#d1fae5;color:#065f46;}
+  .badge-inactive{background:#fee2e2;color:#991b1b;}
+  .badge-it{background:#dbeafe;color:#1e40af;}
+  .badge-user{background:#f3f4f6;color:#374151;}
+  .badge-su{background:#fef3c7;color:#92400e;}
+  /* Acciones */
+  .actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .btn-sm{padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;}
+  .btn-edit{background:#e0e7ff;color:#3730a3;}
+  .btn-edit:hover{background:#c7d2fe;}
+  .btn-pass{background:#fef3c7;color:#92400e;}
+  .btn-pass:hover{background:#fde68a;}
+  .btn-on{background:#d1fae5;color:#065f46;}
+  .btn-on:hover{background:#a7f3d0;}
+  .btn-off{background:#fee2e2;color:#991b1b;}
+  .btn-off:hover{background:#fecaca;}
+  /* Paginación */
+  .pagination{display:flex;justify-content:center;gap:6px;margin-top:24px;flex-wrap:wrap;}
+  .page-link{display:inline-block;padding:7px 13px;border-radius:7px;font-size:13px;font-weight:600;text-decoration:none;border:1px solid #d0d0d0;color:#1B3E92;background:#fff;}
+  .page-link:hover{background:#289DFF;color:#fff;border-color:#289DFF;}
+  .page-link.active{background:#1B3E92;color:#fff;border-color:#1B3E92;pointer-events:none;}
+  .page-link.disabled{color:#9A979F;pointer-events:none;}
+  .empty-state{text-align:center;padding:60px 20px;color:#9A979F;}
+  .user-avatar{width:34px;height:34px;border-radius:50%;background:#1B3E92;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+  .user-cell{display:flex;align-items:center;gap:10px;}
+</style>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Gestión de usuarios</h1>
+    <p style="margin:4px 0 0;font-size:14px;color:#606060;">{{ total }} usuario(s) en total</p>
+  </div>
+  <a href="{% url 'user_create' %}" class="btn-primary">+ Crear usuario</a>
+</div>
+
+<!-- Estadísticas rápidas -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-num">{{ total }}</div>
+    <div class="stat-lbl">Total</div>
+  </div>
+</div>
+
+<!-- Filtros -->
+<form method="get" class="filter-bar">
+  <div class="filter-group">
+    <span class="filter-label">Buscar</span>
+    <input name="q" class="filter-input" placeholder="Usuario, nombre, correo…" value="{{ filters.q }}">
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Rol</span>
+    <select name="role" class="filter-input">
+      <option value="">Todos</option>
+      {% for role in roles %}
+        <option value="{{ role.pk }}" {% if filters.role == role.pk|stringformat:"s" %}selected{% endif %}>{{ role.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Estado</span>
+    <select name="active" class="filter-input">
+      <option value="">Todos</option>
+      <option value="1" {% if filters.active == "1" %}selected{% endif %}>Activos</option>
+      <option value="0" {% if filters.active == "0" %}selected{% endif %}>Inactivos</option>
+    </select>
+  </div>
+  <button type="submit" class="btn-filter">Filtrar</button>
+  <a href="{% url 'user_list' %}" class="btn-clear">Limpiar</a>
+</form>
+
+<div class="card">
+  {% if users %}
+  <table>
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Correo</th>
+        <th>Departamento</th>
+        <th>Rol</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>
+          <div class="user-cell">
+            <div class="user-avatar">{{ u.first_name|first|upper }}{{ u.last_name|first|upper }}</div>
+            <div>
+              <div style="font-weight:600;">{{ u.get_full_name|default:u.username }}</div>
+              <div style="font-size:11px;color:#9A979F;">@{{ u.username }}</div>
+            </div>
+          </div>
+        </td>
+        <td>{{ u.email|default:"—" }}</td>
+        <td>{{ u.profile.department|default:"—" }}</td>
+        <td>
+          {% if u.is_superuser %}
+            <span class="badge badge-su">Superusuario</span>
+          {% elif u.profile.role %}
+            {% if u.profile.is_it_staff %}
+              <span class="badge badge-it">{{ u.profile.role.name }}</span>
+            {% else %}
+              <span class="badge badge-user">{{ u.profile.role.name }}</span>
+            {% endif %}
+          {% else %}
+            <span style="color:#9A979F;font-size:12px;">Sin rol</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if u.is_active %}
+            <span class="badge badge-active">Activo</span>
+          {% else %}
+            <span class="badge badge-inactive">Inactivo</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="actions">
+            <a href="{% url 'user_edit' u.pk %}" class="btn-sm btn-edit">Editar</a>
+            <a href="{% url 'user_change_password' u.pk %}" class="btn-sm btn-pass">Contraseña</a>
+            {% if u != request.user %}
+            <form method="post" action="{% url 'user_toggle_active' u.pk %}" style="display:inline;" onsubmit="return confirm('¿Confirmar cambio de estado del usuario?');">
+              {% csrf_token %}
+              {% if u.is_active %}
+                <button type="submit" class="btn-sm btn-off">Desactivar</button>
+              {% else %}
+                <button type="submit" class="btn-sm btn-on">Activar</button>
+              {% endif %}
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if page_obj.has_other_pages %}
+  <div class="pagination" style="padding:20px;">
+    {% if page_obj.has_previous %}
+      <a href="?{% if filters.q %}q={{ filters.q }}&{% endif %}{% if filters.role %}role={{ filters.role }}&{% endif %}{% if filters.active %}active={{ filters.active }}&{% endif %}page={{ page_obj.previous_page_number }}" class="page-link">← Anterior</a>
+    {% else %}
+      <span class="page-link disabled">← Anterior</span>
+    {% endif %}
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+        <span class="page-link active">{{ num }}</span>
+      {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+        <a href="?{% if filters.q %}q={{ filters.q }}&{% endif %}{% if filters.role %}role={{ filters.role }}&{% endif %}{% if filters.active %}active={{ filters.active }}&{% endif %}page={{ num }}" class="page-link">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+      <a href="?{% if filters.q %}q={{ filters.q }}&{% endif %}{% if filters.role %}role={{ filters.role }}&{% endif %}{% if filters.active %}active={{ filters.active }}&{% endif %}page={{ page_obj.next_page_number }}" class="page-link">Siguiente →</a>
+    {% else %}
+      <span class="page-link disabled">Siguiente →</span>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-state">
+    <div style="font-size:48px;">👤</div>
+    <p style="font-size:15px;font-weight:600;color:#374151;">No se encontraron usuarios</p>
+    <p style="font-size:13px;">Intenta ajustar los filtros o crea un nuevo usuario.</p>
+    <a href="{% url 'user_create' %}" class="btn-primary">Crear usuario</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
