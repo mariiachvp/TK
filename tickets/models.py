@@ -433,6 +433,11 @@ class SystemAuditLog(models.Model):
         USER_ACTIVATED   = "USER_ACTIVATED",   "Usuario activado"
         PASSWORD_CHANGED  = "PASSWORD_CHANGED",  "Contraseña cambiada"
         NOTIFICATION_SENT = "NOTIFICATION_SENT", "Notificación enviada"
+        ROLE_CREATED      = "ROLE_CREATED",      "Rol creado"
+        ROLE_UPDATED      = "ROLE_UPDATED",      "Rol actualizado"
+        ROLE_DELETED      = "ROLE_DELETED",      "Rol eliminado"
+        CATEGORY_CREATED  = "CATEGORY_CREATED",  "Categoría creada"
+        CATEGORY_UPDATED  = "CATEGORY_UPDATED",  "Categoría actualizada"
 
     action      = models.CharField(max_length=20, choices=Action.choices)
     user        = models.ForeignKey(

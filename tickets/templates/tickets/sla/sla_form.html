@@ -1,0 +1,62 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+.page-wrapper{display:flex;justify-content:center;margin:40px 0 60px;}
+.page-card{width:500px;background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.10);padding:35px 40px;}
+.page-title{font-size:24px;font-weight:700;color:#1B3E92;margin:0 0 6px;}
+.form-group{margin-bottom:20px;}
+.form-label{display:block;font-size:12px;font-weight:700;color:#606060;text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;}
+.errorlist{list-style:none;margin:4px 0 0;padding:0;}
+.errorlist li{font-size:12px;color:#dc3545;font-weight:600;}
+.hint{font-size:11px;color:#9A979F;margin-top:4px;}
+.btn-primary{background:#289DFF;color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif;}
+.btn-primary:hover{background:#1B3E92;}
+.priority-badge{display:inline-block;padding:4px 14px;border-radius:999px;font-size:13px;font-weight:700;color:#fff;margin-bottom:20px;}
+.badge-baja{background:#9A979F;}
+.badge-media{background:#289DFF;}
+.badge-alta{background:#fd7e14;}
+.badge-critica{background:#dc3545;}
+@media(max-width:600px){.page-card{width:96%;padding:24px 16px;}}
+</style>
+
+<div class="page-wrapper">
+<div class="page-card">
+
+    <h2 class="page-title">{{ title }}</h2>
+
+    {% if policy.priority == "LOW" %}
+        <span class="priority-badge badge-baja">Prioridad Baja</span>
+    {% elif policy.priority == "MEDIUM" %}
+        <span class="priority-badge badge-media">Prioridad Media</span>
+    {% elif policy.priority == "HIGH" %}
+        <span class="priority-badge badge-alta">Prioridad Alta</span>
+    {% elif policy.priority == "CRITICAL" %}
+        <span class="priority-badge badge-critica">Prioridad Crítica</span>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label class="form-label">{{ form.resolution_hours.label }}</label>
+            {{ form.resolution_hours }}
+            <p class="hint">
+                Horas máximas desde la creación del ticket hasta su resolución.
+                Mínimo: 1h. Máximo: 720h (30 días).
+            </p>
+            {% if form.resolution_hours.errors %}
+                <ul class="errorlist">
+                    {% for e in form.resolution_hours.errors %}<li>{{ e }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:center;margin-top:28px;flex-wrap:wrap;">
+            <button type="submit" class="btn-primary">Guardar política SLA</button>
+            <a href="{% url 'sla_policy_list' %}" style="font-size:13px;font-weight:600;color:#9A979F;text-decoration:none;">Cancelar</a>
+        </div>
+    </form>
+
+</div>
+</div>
+{% endblock %}

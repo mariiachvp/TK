@@ -76,6 +76,7 @@
                 <a href="{% url 'role_list' %}"             class="nav-btn {% if 'role_' in request.resolver_match.url_name %}active{% endif %}">Roles</a>
                 <a href="{% url 'routing_rule_list' %}"     class="nav-btn {% if 'routing_rule' in request.resolver_match.url_name %}active{% endif %}">Reglas</a>
                 <a href="{% url 'category_list' %}"         class="nav-btn {% if 'category_' in request.resolver_match.url_name %}active{% endif %}">Categorías</a>
+                <a href="{% url 'sla_policy_list' %}"       class="nav-btn {% if 'sla_' in request.resolver_match.url_name %}active{% endif %}">SLA</a>
                 <a href="{% url 'audit_log' %}"             class="nav-btn {% if request.resolver_match.url_name == 'audit_log' %}active{% endif %}">Auditoría</a>
             {% endif %}
 

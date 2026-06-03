@@ -110,7 +110,7 @@
         </div>
         <div class="info-block">
             <div class="info-label">Técnico asignado</div>
-            <div class="info-value">{{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username|default:"Sin asignar" }}</div>
+            <div class="info-value">{% if ticket.assigned_to %}{{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}{% else %}Sin asignar{% endif %}</div>
         </div>
         <div class="info-block">
             <div class="info-label">Creado</div>
@@ -227,7 +227,7 @@
         {% for note in public_notes %}
         <div class="msg-bubble {% if note.author == ticket.requester %}msg-user{% else %}msg-it{% endif %}">
             <div class="msg-header">
-                <span class="msg-author">{{ note.author.get_full_name|default:note.author.username|default:"Sistema" }}</span>
+                <span class="msg-author">{% if note.author %}{{ note.author.get_full_name|default:note.author.username }}{% else %}Sistema{% endif %}</span>
                 {% if note.author == ticket.requester %}
                     <span class="msg-badge badge-user">Usuario</span>
                 {% else %}
@@ -260,7 +260,7 @@
         {% for note in internal_notes %}
         <div class="msg-bubble msg-it-internal" style="align-self:flex-start;">
             <div class="msg-header">
-                <span class="msg-author">{{ note.author.get_full_name|default:note.author.username|default:"Sistema" }}</span>
+                <span class="msg-author">{% if note.author %}{{ note.author.get_full_name|default:note.author.username }}{% else %}Sistema{% endif %}</span>
                 <span class="msg-badge badge-internal">Interna</span>
                 <span class="msg-time">{{ note.created_at|date:"d/m/Y H:i" }}</span>
             </div>

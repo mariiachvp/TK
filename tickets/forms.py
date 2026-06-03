@@ -4,7 +4,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 
-from .models import Role, RolePermission, Ticket, TicketAttachment, TicketCategory, TicketNote, TicketRoutingRule
+from .models import Role, RolePermission, SLAPolicy, Ticket, TicketAttachment, TicketCategory, TicketNote, TicketRoutingRule
 
 _ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".pdf", ".docx", ".xlsx", ".zip", ".txt", ".log"}
 _MAX_UPLOAD_BYTES   = 10 * 1024 * 1024  # 10 MB
@@ -333,6 +333,21 @@ class TicketCategoryForm(forms.ModelForm):
         if qs.exists():
             raise forms.ValidationError("Este código ya está en uso.")
         return code
+
+
+class SLAPolicyForm(forms.ModelForm):
+    """Edita las horas de resolución de una política SLA."""
+
+    class Meta:
+        model  = SLAPolicy
+        fields = ["resolution_hours"]
+        widgets = {
+            "resolution_hours": forms.NumberInput(attrs={
+                "min": 1, "max": 720,
+                "style": _INPUT_STYLE,
+            }),
+        }
+        labels = {"resolution_hours": "Horas máximas de resolución"}
 
 
 class RoleForm(forms.ModelForm):

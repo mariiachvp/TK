@@ -55,4 +55,8 @@ urlpatterns = [
     path("it/categorias/crear/",             views.category_create, name="category_create"),
     path("it/categorias/<int:pk>/editar/",   views.category_edit,   name="category_edit"),
     path("it/categorias/<int:pk>/toggle/",   views.category_toggle, name="category_toggle"),
+
+    # --- Políticas SLA ---
+    path("it/sla/",                        views.sla_policy_list, name="sla_policy_list"),
+    path("it/sla/<int:pk>/editar/",        views.sla_policy_edit, name="sla_policy_edit"),
 ]

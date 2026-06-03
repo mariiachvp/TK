@@ -19,11 +19,11 @@ from django.utils import timezone
 
 from .forms import (
     AttachmentUploadForm, RoleForm, RoutingRuleForm, SetPasswordAdminForm,
-    TicketCategoryForm, TicketCreateForm, TicketNoteForm, TicketResponseForm, UserCommentForm,
-    UserCreateForm, UserEditForm,
+    SLAPolicyForm, TicketCategoryForm, TicketCreateForm, TicketNoteForm,
+    TicketResponseForm, UserCommentForm, UserCreateForm, UserEditForm,
 )
 from .models import (
-    AuditLog, Role, RolePermission, SystemAuditLog,
+    AuditLog, Role, RolePermission, SLAPolicy, SystemAuditLog,
     Ticket, TicketAttachment, TicketCategory, TicketNote, TicketRoutingRule, TicketWorkSession, UserProfile,
 )
 from .notifications import notify_comment_added
@@ -218,13 +218,8 @@ def reopen_ticket(request, pk):
 
     ticket.status      = Ticket.Status.REABIERTO
     ticket._changed_by = request.user
-    ticket.save()
+    ticket.save()  # signal crea AuditLog.REOPENED automáticamente
 
-    AuditLog.objects.create(
-        ticket=ticket,
-        user=request.user,
-        action=AuditLog.Action.REOPENED,
-    )
     logger.info("Ticket %s reabierto por '%s'", ticket.ticket_number, request.user.username)
     messages.success(request, "Tu ticket fue reabierto. El equipo IT lo revisará pronto.")
     return redirect("user_ticket_detail", pk=pk)
@@ -329,6 +324,9 @@ def delete_attachment(request, attachment_pk):
     if profile.is_it_staff:
         redirect_view = "respond_ticket"
     elif ticket.requester == request.user:
+        if ticket.status == Ticket.Status.CERRADO:
+            messages.error(request, "No puedes eliminar adjuntos de un ticket cerrado.")
+            return redirect("user_ticket_detail", pk=ticket.pk)
         redirect_view = "user_ticket_detail"
     else:
         messages.error(request, "No tienes permiso para eliminar este adjunto.")
@@ -1189,11 +1187,16 @@ def role_list(request):
     return render(request, "tickets/roles/role_list.html", {"roles": roles})
 
 
-@it_required
+@permission_required("roles.gestionar")
 def role_create(request):
     form = RoleForm(request.POST or None)
     if form.is_valid():
         role = form.save()
+        SystemAuditLog.objects.create(
+            action=SystemAuditLog.Action.ROLE_CREATED,
+            user=request.user,
+            details=f"Rol: {role.name} (código: {role.code})",
+        )
         logger.info("Rol '%s' creado por '%s'", role.name, request.user.username)
         return redirect("role_list")
     return render(request, "tickets/roles/role_form.html", {
@@ -1204,12 +1207,17 @@ def role_create(request):
     })
 
 
-@it_required
+@permission_required("roles.gestionar")
 def role_edit(request, pk):
     role = get_object_or_404(Role, pk=pk)
     form = RoleForm(request.POST or None, instance=role)
     if form.is_valid():
         form.save()
+        SystemAuditLog.objects.create(
+            action=SystemAuditLog.Action.ROLE_UPDATED,
+            user=request.user,
+            details=f"Rol: {role.name} (código: {role.code})",
+        )
         logger.info("Rol '%s' editado por '%s'", role.name, request.user.username)
         return redirect("role_list")
     return render(request, "tickets/roles/role_form.html", {
@@ -1221,18 +1229,24 @@ def role_edit(request, pk):
     })
 
 
-@it_required
+@permission_required("roles.gestionar")
 def role_delete(request, pk):
     role = get_object_or_404(Role, pk=pk)
     if request.method == "POST":
         name = role.name
+        code = role.code
         role.delete()
+        SystemAuditLog.objects.create(
+            action=SystemAuditLog.Action.ROLE_DELETED,
+            user=request.user,
+            details=f"Rol eliminado: {name} (código: {code})",
+        )
         logger.info("Rol '%s' eliminado por '%s'", name, request.user.username)
         return redirect("role_list")
     return render(request, "tickets/roles/role_confirm_delete.html", {"role": role})
 
 
-@it_required
+@permission_required("roles.gestionar")
 def role_toggle(request, pk):
     if request.method != "POST":
         return redirect("role_list")
@@ -1407,6 +1421,11 @@ def category_create(request):
     form = TicketCategoryForm(request.POST or None)
     if form.is_valid():
         cat = form.save()
+        SystemAuditLog.objects.create(
+            action=SystemAuditLog.Action.CATEGORY_CREATED,
+            user=request.user,
+            details=f"Categoría: {cat.name} (código: {cat.code})",
+        )
         messages.success(request, f"Categoría «{cat.name}» creada.")
         logger.info("Categoría '%s' creada por '%s'", cat.code, request.user.username)
         return redirect("category_list")
@@ -1419,6 +1438,11 @@ def category_edit(request, pk):
     form = TicketCategoryForm(request.POST or None, instance=cat)
     if form.is_valid():
         form.save()
+        SystemAuditLog.objects.create(
+            action=SystemAuditLog.Action.CATEGORY_UPDATED,
+            user=request.user,
+            details=f"Categoría: {cat.name} (código: {cat.code})",
+        )
         messages.success(request, f"Categoría «{cat.name}» actualizada.")
         logger.info("Categoría '%s' editada por '%s'", cat.code, request.user.username)
         return redirect("category_list")
@@ -1439,3 +1463,51 @@ def category_toggle(request, pk):
     state = "activada" if cat.is_active else "desactivada"
     messages.success(request, f"Categoría «{cat.name}» {state}.")
     return redirect("category_list")
+
+
+# ---------------------------------------------------------------------------
+# Gestión de políticas SLA
+# ---------------------------------------------------------------------------
+
+@permission_required("tickets.gestionar")
+def sla_policy_list(request):
+    """Lista las 4 políticas SLA (una por nivel de prioridad)."""
+    policies = SLAPolicy.objects.order_by("priority")
+    priority_order = {v: i for i, (v, _) in enumerate(Ticket.Priority.choices)}
+    policies = sorted(policies, key=lambda p: priority_order.get(p.priority, 99))
+    return render(request, "tickets/sla/sla_list.html", {
+        "policies":  policies,
+        "priorities": Ticket.Priority.choices,
+    })
+
+
+@permission_required("tickets.gestionar")
+def sla_policy_edit(request, pk):
+    """Edita las horas de resolución de una política SLA."""
+    policy = get_object_or_404(SLAPolicy, pk=pk)
+    form   = SLAPolicyForm(request.POST or None, instance=policy)
+    if form.is_valid():
+        form.save()
+        SystemAuditLog.objects.create(
+            action=SystemAuditLog.Action.USER_UPDATED,
+            user=request.user,
+            details=(
+                f"SLA [{policy.get_priority_display()}] actualizado: "
+                f"{policy.resolution_hours}h"
+            ),
+        )
+        messages.success(
+            request,
+            f"SLA para prioridad {policy.get_priority_display()} "
+            f"actualizado a {policy.resolution_hours}h.",
+        )
+        logger.info(
+            "SLA [%s] → %sh editado por '%s'",
+            policy.priority, policy.resolution_hours, request.user.username,
+        )
+        return redirect("sla_policy_list")
+    return render(request, "tickets/sla/sla_form.html", {
+        "form":   form,
+        "policy": policy,
+        "title":  f"Editar SLA — {policy.get_priority_display()}",
+    })

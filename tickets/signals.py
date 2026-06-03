@@ -156,8 +156,9 @@ def prepare_ticket_before_save(sender, instance, **kwargs):
             logger.debug("Ticket #%s: resolved_at = %s", instance.pk, now)
 
         elif instance.status in (Ticket.Status.ABIERTO, Ticket.Status.REABIERTO):
-            # Vuelve a estado abierto: reiniciamos started_at para medición limpia
-            instance.started_at = None
+            # Vuelve a estado abierto: reiniciamos tiempos para medición limpia
+            instance.started_at  = None
+            instance.resolved_at = None
 
 
 # ---------------------------------------------------------------------------
@@ -201,7 +202,11 @@ def handle_ticket_post_save(sender, instance, created, **kwargs):
             continue
 
         if field == "status":
-            action = AuditLog.Action.STATUS_CHANGE
+            action = (
+                AuditLog.Action.REOPENED
+                if instance.status == Ticket.Status.REABIERTO
+                else AuditLog.Action.STATUS_CHANGE
+            )
         elif field == "response":
             action = AuditLog.Action.RESPONDED
         else:

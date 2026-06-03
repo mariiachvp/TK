@@ -32,6 +32,23 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 X_FRAME_OPTIONS = "DENY"
 
 # Logs rotativos en archivo para producción
+# ---------------------------------------------------------------------------
+# Cache — Redis obligatorio en producción para rate limiting multi-proceso.
+# Configurar REDIS_URL, ej: redis://localhost:6379/0
+# ---------------------------------------------------------------------------
+_REDIS_URL = os.environ.get("REDIS_URL", "")
+if not _REDIS_URL:
+    raise RuntimeError(
+        "REDIS_URL no está definida. El rate limiting de login no funcionará "
+        "correctamente con múltiples workers. Configura Redis y define REDIS_URL."
+    )
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": _REDIS_URL,
+    }
+}
+
 LOGS_DIR = BASE_DIR / "logs"
 LOGS_DIR.mkdir(exist_ok=True)
 

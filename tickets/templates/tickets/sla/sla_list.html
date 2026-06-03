@@ -1,0 +1,99 @@
+{% extends "tickets/base.html" %}
+{% block content %}
+<style>
+.page-wrapper{display:flex;justify-content:center;margin:40px 0 60px;}
+.page-card{width:800px;background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.10);padding:35px 40px;}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:12px;}
+.page-title{font-size:28px;font-weight:700;color:#1B3E92;margin:0;}
+.sla-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:24px;}
+.sla-table th{text-align:left;padding:10px 16px;font-size:11px;font-weight:700;color:#606060;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid #eef0f4;background:#F7F8FB;}
+.sla-table td{padding:16px;border-bottom:1px solid #f3f4f6;vertical-align:middle;}
+.sla-table tr:hover td{background:#fafafa;}
+.priority-badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;color:#fff;}
+.badge-baja{background:#9A979F;}
+.badge-media{background:#289DFF;}
+.badge-alta{background:#fd7e14;}
+.badge-critica{background:#dc3545;}
+.hours-display{font-size:22px;font-weight:700;color:#1B3E92;}
+.hours-unit{font-size:13px;color:#9A979F;font-weight:400;margin-left:4px;}
+.btn-edit{background:#289DFF;color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:12px;font-weight:600;text-decoration:none;display:inline-block;font-family:'Montserrat',sans-serif;}
+.btn-edit:hover{background:#1B3E92;}
+@media(max-width:800px){.page-card{width:96%;padding:24px 16px;}}
+</style>
+
+<div class="page-wrapper">
+<div class="page-card">
+
+    <div class="page-header">
+        <h2 class="page-title">Políticas SLA</h2>
+    </div>
+
+    <p style="font-size:13px;color:#606060;margin:0 0 4px;">
+        Define cuántas horas tiene el equipo IT para resolver un ticket según su prioridad.
+        El deadline SLA se calcula desde el momento de creación del ticket.
+    </p>
+
+    <table class="sla-table">
+        <thead>
+            <tr>
+                <th>Prioridad</th>
+                <th>Tiempo máximo de resolución</th>
+                <th>Equivalente</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for policy in policies %}
+            <tr>
+                <td>
+                    {% if policy.priority == "LOW" %}
+                        <span class="priority-badge badge-baja">Baja</span>
+                    {% elif policy.priority == "MEDIUM" %}
+                        <span class="priority-badge badge-media">Media</span>
+                    {% elif policy.priority == "HIGH" %}
+                        <span class="priority-badge badge-alta">Alta</span>
+                    {% elif policy.priority == "CRITICAL" %}
+                        <span class="priority-badge badge-critica">Crítica</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="hours-display">{{ policy.resolution_hours }}</span>
+                    <span class="hours-unit">horas</span>
+                </td>
+                <td style="color:#606060;font-size:13px;">
+                    {% if policy.resolution_hours >= 24 %}
+                        {{ policy.resolution_hours|floatformat:0 }}h
+                        ({% widthratio policy.resolution_hours 24 1 %} día{% if policy.resolution_hours >= 48 %}s{% endif %})
+                    {% else %}
+                        {{ policy.resolution_hours }}h
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'sla_policy_edit' policy.pk %}" class="btn-edit">Editar</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="4" style="text-align:center;padding:40px;color:#9A979F;">
+                    No hay políticas SLA configuradas.
+                    Ejecuta <code>python manage.py migrate</code> y agrega políticas desde el admin.
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="margin-top:28px;background:#FFF8E1;border:1px solid #FFE082;border-radius:8px;padding:14px 18px;">
+        <p style="font-size:12px;color:#795548;margin:0;font-weight:600;">
+            ⚠ Los cambios aquí no modifican el deadline de tickets ya creados.
+            Solo aplican a nuevos tickets o a tickets cuya prioridad cambie después de la edición.
+        </p>
+    </div>
+
+    <div style="margin-top:24px;">
+        <a href="{% url 'ticket_list' %}" style="font-size:13px;font-weight:600;color:#9A979F;text-decoration:none;">← Panel IT</a>
+    </div>
+
+</div>
+</div>
+{% endblock %}

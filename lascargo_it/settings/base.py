@@ -75,6 +75,18 @@ LOGOUT_REDIRECT_URL = "/accounts/login/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ---------------------------------------------------------------------------
+# Cache — LocMem para desarrollo; producción sobreescribe con Redis.
+# El rate limiting de login (LoginRateLimitMiddleware) requiere cache compartido
+# entre workers. Con LocMem cada worker tiene su propio contador independiente.
+# ---------------------------------------------------------------------------
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "lascargo-it",
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Microsoft Graph API — Fase 3
 # Dejar en blanco para deshabilitar notificaciones sin romper el sistema.
 # ---------------------------------------------------------------------------
