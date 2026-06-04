@@ -59,8 +59,8 @@ class RoleAdmin(admin.ModelAdmin):
     @admin.display(description="Activo", boolean=False)
     def is_active_badge(self, obj):
         if obj.is_active:
-            return format_html('<span style="color:#198754;font-weight:600;">✓ Activo</span>')
-        return format_html('<span style="color:#dc3545;font-weight:600;">✗ Inactivo</span>')
+            return format_html('<span style="color:#198754;font-weight:600;">{}</span>', '✓ Activo')
+        return format_html('<span style="color:#dc3545;font-weight:600;">{}</span>', '✗ Inactivo')
 
     @admin.display(description="Permisos")
     def permission_count_display(self, obj):
