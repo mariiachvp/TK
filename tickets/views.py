@@ -2,6 +2,7 @@ import csv
 import json
 import logging
 import mimetypes
+import re
 from datetime import timedelta
 from functools import wraps
 from urllib.parse import urlencode
@@ -19,7 +20,7 @@ from django.utils import timezone
 
 from .forms import (
     AttachmentUploadForm, RoleForm, RoutingRuleForm, SetPasswordAdminForm,
-    SLAPolicyForm, TicketCategoryForm, TicketCreateForm, TicketNoteForm,
+    SLAPolicyForm, TicketCategoryForm, TicketCreateForm,
     TicketResponseForm, UserCommentForm, UserCreateForm, UserEditForm,
 )
 from .models import (
@@ -367,8 +368,9 @@ def download_attachment(request, attachment_pk):
             or mimetypes.guess_type(attachment.original_name)[0]
             or "application/octet-stream"
         )
+        safe_name = re.sub(r'[^\w\s\-.]', '_', attachment.original_name)
         response["Content-Type"]        = content_type
-        response["Content-Disposition"] = f'attachment; filename="{attachment.original_name}"'
+        response["Content-Disposition"] = f'attachment; filename="{safe_name}"'
         return response
     except FileNotFoundError:
         messages.error(request, "El archivo no se encuentra en el servidor.")
@@ -969,6 +971,7 @@ def bulk_action_tickets(request):
             t._changed_by = request.user
             t.status      = Ticket.Status.ABIERTO
             t.save()
+        logger.info("Acción masiva ABIERTO: %d ticket(s) por '%s'", len(ticket_ids), request.user.username)
 
     elif action.startswith("asignar_"):
         tech_id = action.split("_", 1)[1]
@@ -1184,7 +1187,10 @@ def role_list(request):
         .prefetch_related("permissions", "users")
         .order_by("name")
     )
-    return render(request, "tickets/roles/role_list.html", {"roles": roles})
+    return render(request, "tickets/roles/role_list.html", {
+        "roles":        roles,
+        "active_count": sum(1 for r in roles if r.is_active),
+    })
 
 
 @permission_required("roles.gestionar")
@@ -1489,7 +1495,7 @@ def sla_policy_edit(request, pk):
     if form.is_valid():
         form.save()
         SystemAuditLog.objects.create(
-            action=SystemAuditLog.Action.USER_UPDATED,
+            action=SystemAuditLog.Action.SLA_UPDATED,
             user=request.user,
             details=(
                 f"SLA [{policy.get_priority_display()}] actualizado: "

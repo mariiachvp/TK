@@ -128,8 +128,6 @@ class TicketCategory(models.Model):
     is_active   = models.BooleanField(default=True, verbose_name="Activa")
     order       = models.PositiveSmallIntegerField(default=0, verbose_name="Orden")
 
-    _cache: dict = {}
-
     class Meta:
         ordering            = ["order", "name"]
         verbose_name        = "Categoría"
@@ -138,15 +136,12 @@ class TicketCategory(models.Model):
     def __str__(self):
         return self.name + ("" if self.is_active else " (inactiva)")
 
-    def save(self, *args, **kwargs):
-        TicketCategory._cache.clear()
-        super().save(*args, **kwargs)
-
     @classmethod
     def get_label(cls, code: str) -> str:
-        if not cls._cache:
-            cls._cache = dict(cls.objects.values_list("code", "name"))
-        return cls._cache.get(code, code)
+        try:
+            return cls.objects.get(code=code).name
+        except cls.DoesNotExist:
+            return code
 
     @classmethod
     def active_choices(cls):
@@ -178,18 +173,6 @@ class Ticket(models.Model):
         HIGH     = "HIGH",     "Alta"
         CRITICAL = "CRITICAL", "Crítica"
 
-    class Category(models.TextChoices):
-        MICROSOFT_365 = "M365",        "Microsoft 365"
-        OUTLOOK       = "OUTLOOK",     "Outlook / Correo"
-        REDES         = "REDES",       "Redes"
-        EQUIPOS       = "EQUIPOS",     "Equipos / Hardware"
-        SEGURIDAD     = "SEGURIDAD",   "Seguridad"
-        VPN           = "VPN",         "VPN / Acceso Remoto"
-        SHAREPOINT    = "SHAREPOINT",  "SharePoint"
-        AZURE         = "AZURE",       "Azure"
-        APPS          = "APPS",        "Aplicaciones Corporativas"
-        OTRO          = "OTRO",        "Otro"
-
     # --- Campos originales ---
     ticket_number = models.CharField(max_length=20, blank=True, default="", db_index=True)
     requester   = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tickets")
@@ -209,7 +192,7 @@ class Ticket(models.Model):
 
     # --- Campos Fase 2 ---
     priority    = models.CharField(max_length=10, choices=Priority.choices, default=Priority.MEDIUM)
-    category    = models.CharField(max_length=20, default=Category.OTRO)
+    category    = models.CharField(max_length=20, default="OTRO")
     assigned_to = models.ForeignKey(
         User, null=True, blank=True,
         on_delete=models.SET_NULL, related_name="assigned_tickets"
@@ -438,6 +421,7 @@ class SystemAuditLog(models.Model):
         ROLE_DELETED      = "ROLE_DELETED",      "Rol eliminado"
         CATEGORY_CREATED  = "CATEGORY_CREATED",  "Categoría creada"
         CATEGORY_UPDATED  = "CATEGORY_UPDATED",  "Categoría actualizada"
+        SLA_UPDATED       = "SLA_UPDATED",       "SLA actualizado"
 
     action      = models.CharField(max_length=20, choices=Action.choices)
     user        = models.ForeignKey(

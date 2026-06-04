@@ -52,6 +52,23 @@
             color:#606060;
             font-weight:600;
         }
+        .forgot-link{
+            display:block;
+            text-align:center;
+            margin-top:14px;
+            color:#9A979F;
+            font-size:13px;
+            text-decoration:none;
+        }
+        .forgot-link:hover{color:#1B3E92;}
+        .error-msg{
+            background:#fee2e2;
+            color:#991b1b;
+            border-radius:6px;
+            padding:10px 14px;
+            font-size:13px;
+            margin-bottom:16px;
+        }
     </style>
 </head>
 <body>
@@ -62,11 +79,17 @@
     <div class="container">
         <h2>Iniciar sesión</h2>
 
+        {% if form.errors %}
+        <div class="error-msg">Usuario o contraseña incorrectos. Inténtalo de nuevo.</div>
+        {% endif %}
+
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
             <button type="submit">Entrar</button>
         </form>
+
+        <a href="/accounts/password_reset/" class="forgot-link">¿Olvidaste tu contraseña?</a>
     </div>
 </body>
 </html>

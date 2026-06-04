@@ -15,3 +15,6 @@ DATABASES = {
 # En desarrollo, todos los logs a consola con nivel DEBUG
 LOGGING["root"]["level"] = "DEBUG"
 LOGGING["loggers"]["tickets"]["level"] = "DEBUG"
+
+# Correos de recuperación de contraseña — se imprimen en la consola del servidor
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

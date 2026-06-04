@@ -71,6 +71,8 @@ MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "soporte-it@lascargo.com")
+PASSWORD_RESET_TIMEOUT = 86400  # 24 horas
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

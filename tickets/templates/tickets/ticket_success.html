@@ -106,7 +106,7 @@
             Tu ticket ha sido enviado correctamente bajo el número:
         </div>
 
-        <div class="ticket-number">#{{ ticket.id }}</div>
+        <div class="ticket-number">{{ ticket.ticket_number|default:ticket.id }}</div>
 
         <div class="success-actions">
             <a href="{% url 'create_ticket' %}" class="btn-secondary">Crear otro ticket</a>
