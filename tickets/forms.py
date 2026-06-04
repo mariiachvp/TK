@@ -53,8 +53,21 @@ class TicketResponseForm(forms.ModelForm):
             User.objects.filter(profile__role__is_it_staff=True).select_related("profile")
         )
         self.fields["assigned_to"].empty_label = "Sin asignar"
+
+        choices = TicketCategory.active_choices()
+        # If the ticket already has an inactive category, keep it visible so the
+        # technician sees the real category and doesn't accidentally change it.
+        if self.instance and self.instance.pk and self.instance.category:
+            active_codes = {code for code, _ in choices}
+            if self.instance.category not in active_codes:
+                try:
+                    cat = TicketCategory.objects.get(code=self.instance.category)
+                    choices = [(cat.code, f"{cat.name} (inactiva)")] + choices
+                except TicketCategory.DoesNotExist:
+                    choices = [(self.instance.category, self.instance.category)] + choices
+
         self.fields["category"] = forms.ChoiceField(
-            choices=TicketCategory.active_choices(),
+            choices=choices,
             widget=forms.Select(attrs={"style": _INPUT_STYLE}),
             label="Categoría",
         )
@@ -273,8 +286,19 @@ class RoutingRuleForm(forms.ModelForm):
         self.fields["assigned_to"].label_from_instance = (
             lambda u: u.get_full_name() or u.username
         )
+
+        choices = TicketCategory.active_choices()
+        if self.instance and self.instance.pk and self.instance.category:
+            active_codes = {code for code, _ in choices}
+            if self.instance.category not in active_codes:
+                try:
+                    cat = TicketCategory.objects.get(code=self.instance.category)
+                    choices = [(cat.code, f"{cat.name} (inactiva)")] + choices
+                except TicketCategory.DoesNotExist:
+                    choices = [(self.instance.category, self.instance.category)] + choices
+
         self.fields["category"] = forms.ChoiceField(
-            choices=TicketCategory.active_choices(),
+            choices=choices,
             widget=forms.Select(attrs={"style": _INPUT_STYLE}),
             label="Categoría de ticket",
         )

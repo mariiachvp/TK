@@ -1475,7 +1475,7 @@ def category_toggle(request, pk):
 # Gestión de políticas SLA
 # ---------------------------------------------------------------------------
 
-@permission_required("tickets.gestionar")
+@it_required
 def sla_policy_list(request):
     """Lista las 4 políticas SLA (una por nivel de prioridad)."""
     policies = SLAPolicy.objects.order_by("priority")
