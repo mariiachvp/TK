@@ -214,7 +214,7 @@
                     <td><span class="badge {{ t.priority_css_class }}" style="padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;color:#fff;">{{ t.get_priority_display }}</span></td>
                     <td>{{ t.get_status_display }}</td>
                     <td>{{ t.sla_deadline|date:"d/m/Y H:i" }}</td>
-                    <td>{{ t.assigned_to.get_full_name|default:t.assigned_to.username|default:"Sin asignar" }}</td>
+                    <td>{% if t.assigned_to %}{{ t.assigned_to.get_full_name|default:t.assigned_to.username }}{% else %}Sin asignar{% endif %}</td>
                     <td>
                         {% if t.is_overdue %}
                             <span class="overdue-badge">VENCIDO</span>

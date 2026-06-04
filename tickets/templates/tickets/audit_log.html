@@ -175,7 +175,7 @@ code{background:#f3f4f6;border-radius:4px;padding:2px 6px;font-size:11px;color:#
                         {% if log.old_value or log.new_value %}{{ log.old_value }} → {{ log.new_value }}{% else %}—{% endif %}
                     {% endif %}
                 </td>
-                <td style="color:#606060;">{{ log.user.get_full_name|default:log.user.username|default:"Sistema" }}</td>
+                <td style="color:#606060;">{% if log.user %}{{ log.user.get_full_name|default:log.user.username }}{% else %}Sistema{% endif %}</td>
             </tr>
         {% empty %}
             <tr class="empty-row"><td colspan="5">Sin registros para estos filtros.</td></tr>
@@ -203,7 +203,7 @@ code{background:#f3f4f6;border-radius:4px;padding:2px 6px;font-size:11px;color:#
                 <td>
                     <span class="abadge abadge-{{ log.action|lower }}">{{ log.get_action_display }}</span>
                 </td>
-                <td>{{ log.user.get_full_name|default:log.user.username|default:"—" }}</td>
+                <td>{% if log.user %}{{ log.user.get_full_name|default:log.user.username }}{% else %}—{% endif %}</td>
                 <td>
                     {% if log.target_user and log.target_user != log.user %}
                         {{ log.target_user.get_full_name|default:log.target_user.username }}

@@ -110,7 +110,7 @@
         <div class="info-block">
             <div class="info-label">Técnico asignado</div>
             <div class="info-value">
-                {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username|default:"Sin asignar" }}
+                {% if ticket.assigned_to %}{{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}{% else %}Sin asignar{% endif %}
             </div>
         </div>
     </div>
@@ -144,7 +144,7 @@
         {% else %}
         <div class="msg-bubble msg-it">
             <div class="msg-header">
-                <span class="msg-author">{{ note.author.get_full_name|default:note.author.username|default:"Equipo IT" }}</span>
+                <span class="msg-author">{% if note.author %}{{ note.author.get_full_name|default:note.author.username }}{% else %}Equipo IT{% endif %}</span>
                 <span class="msg-badge badge-it-label">IT</span>
                 <span class="msg-time">{{ note.created_at|date:"d/m/Y H:i" }}</span>
             </div>
