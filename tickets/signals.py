@@ -91,6 +91,9 @@ def audit_login_failed(sender, credentials, request, **kwargs):
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
+        # Superusers and staff are managed via Django admin — no app profile needed.
+        if instance.is_superuser or instance.is_staff:
+            return
         from .models import Role
         default_role = Role.objects.filter(code="OPERADOR", is_active=True).first()
         _, was_created = UserProfile.objects.get_or_create(

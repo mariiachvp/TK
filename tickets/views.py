@@ -40,6 +40,8 @@ logger = logging.getLogger("tickets")
 def is_it(user):
     if not user.is_authenticated:
         return False
+    if user.is_superuser:
+        return True
     profile = getattr(user, "profile", None)
     return bool(profile and profile.is_it_staff)
 
@@ -105,6 +107,8 @@ def _ensure_profile(user):
 
 @login_required
 def home(request):
+    if request.user.is_superuser:
+        return redirect("ticket_list")
     profile = _ensure_profile(request.user)
     if profile is None:
         return redirect("/admin/")
@@ -115,6 +119,8 @@ def home(request):
 
 @login_required
 def create_ticket(request):
+    if request.user.is_superuser:
+        return redirect("ticket_list")
     profile = _ensure_profile(request.user)
 
     if profile is None:
@@ -146,6 +152,8 @@ def ticket_success(request, pk):
 
 @login_required
 def my_tickets(request):
+    if request.user.is_superuser:
+        return redirect("ticket_list")
     profile = _ensure_profile(request.user)
 
     if profile is None:
@@ -170,6 +178,8 @@ def my_tickets(request):
 
 @login_required
 def user_ticket_detail(request, pk):
+    if request.user.is_superuser:
+        return redirect("respond_ticket", pk=pk)
     profile = _ensure_profile(request.user)
     if profile is None:
         return redirect("/admin/")
@@ -274,7 +284,7 @@ def upload_attachment(request, pk):
     if profile is None:
         return redirect("/admin/")
 
-    if profile.is_it_staff:
+    if profile.is_it_staff or request.user.is_superuser:
         ticket        = get_object_or_404(Ticket, pk=pk)
         redirect_view = "respond_ticket"
     else:

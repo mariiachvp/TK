@@ -60,12 +60,12 @@
         {% if request.user.is_authenticated %}
             {% with profile=request.user.profile %}
 
-            {% if not profile.is_it_staff %}
+            {% if not profile.is_it_staff and not request.user.is_superuser %}
                 <a href="{% url 'create_ticket' %}" class="nav-btn {% if request.resolver_match.url_name == 'create_ticket' %}active{% endif %}">Crear ticket</a>
                 <a href="{% url 'my_tickets' %}"    class="nav-btn {% if request.resolver_match.url_name == 'my_tickets' %}active{% endif %}">Mis tickets</a>
             {% endif %}
 
-            {% if profile.is_it_staff %}
+            {% if profile.is_it_staff or request.user.is_superuser %}
                 <a href="{% url 'ticket_list' %}"           class="nav-btn {% if request.resolver_match.url_name == 'ticket_list' %}active{% endif %}">Panel IT</a>
                 <a href="{% url 'technician_dashboard' %}"  class="nav-btn {% if request.resolver_match.url_name == 'technician_dashboard' %}active{% endif %}">Mi dashboard</a>
                 <a href="{% url 'it_stats' %}"              class="nav-btn {% if request.resolver_match.url_name == 'it_stats' %}active{% endif %}">Estadísticas</a>
