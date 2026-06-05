@@ -36,3 +36,9 @@ Thumbs.db
 
 # Migraciones no comprometidas (opcional — quitar si el equipo las comparte)
 # tickets/migrations/
+
+# Archivos subidos por usuarios
+media/
+
+# Respaldos locales — nunca subir a git
+backups/
