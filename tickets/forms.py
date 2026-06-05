@@ -373,6 +373,14 @@ class SLAPolicyForm(forms.ModelForm):
         }
         labels = {"resolution_hours": "Horas máximas de resolución"}
 
+    def clean_resolution_hours(self):
+        hours = self.cleaned_data["resolution_hours"]
+        if hours < 1:
+            raise forms.ValidationError("El número de horas debe ser al menos 1.")
+        if hours > 720:
+            raise forms.ValidationError("El número de horas no puede superar 720 (30 días).")
+        return hours
+
 
 class RoleForm(forms.ModelForm):
     """Formulario para crear y editar roles dinámicos."""
